@@ -23,8 +23,7 @@ from .manifest_live import ManifestLiveMatch
 from .sabacc_live import SabaccLiveMatch
 from . import wsutil
 
-ROOT = Path(__file__).resolve().parent.parent
-STATIC_DIR = ROOT / "holotable"
+STATIC_DIR = Path(__file__).resolve().parent / "web"
 
 MatchType = Union[LiveMatch, SabaccLiveMatch, ManifestLiveMatch]
 
@@ -362,7 +361,7 @@ def json_bytes(obj: Any, code: int = 200) -> tuple[int, bytes, str]:
 
 
 class HeliosHandler(BaseHTTPRequestHandler):
-    server_version = "HeliosFlip7/0.4"
+    server_version = "Holotable/0.5"
 
     def log_message(self, fmt: str, *args) -> None:
         if os.environ.get("HELIOS_VERBOSE"):

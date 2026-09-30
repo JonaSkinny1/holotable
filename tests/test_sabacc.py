@@ -1,7 +1,7 @@
 import random
 import unittest
 
-from flip7.sabacc import (
+from holotable.sabacc import (
     SabaccGame,
     SabaccTurnController,
     create_sabacc_deck,
@@ -10,7 +10,7 @@ from flip7.sabacc import (
     stand_points,
     card_value,
 )
-from flip7.sabacc_live import SabaccLiveMatch
+from holotable.sabacc_live import SabaccLiveMatch
 
 
 class TestSabaccDeck(unittest.TestCase):

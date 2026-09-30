@@ -9,9 +9,9 @@ import unittest
 from http.server import ThreadingHTTPServer
 from urllib import error, request
 
-from flip7.live import LiveMatch
-from flip7.manifest import GOODS
-from flip7.server import HeliosHandler, get_game_id, set_match
+from holotable.live import LiveMatch
+from holotable.manifest import GOODS
+from holotable.server import HeliosHandler, get_game_id, set_match
 
 
 class TestManifestServer(unittest.TestCase):

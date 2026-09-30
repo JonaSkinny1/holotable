@@ -3,8 +3,8 @@ import threading
 import unittest
 from urllib import error, request
 
-from flip7.server import HeliosHandler, set_match
-from flip7.live import LiveMatch
+from holotable.server import HeliosHandler, set_match
+from holotable.live import LiveMatch
 from http.server import ThreadingHTTPServer
 import random
 

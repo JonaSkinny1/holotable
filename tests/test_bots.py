@@ -14,15 +14,15 @@ from urllib import error, request
 # Fast bot turns for integration tests
 os.environ["HELIOS_BOT_DELAY"] = "0.05"
 
-from flip7.bots import (  # noqa: E402
+from holotable.bots import (  # noqa: E402
     BOT_NAMES,
     build_roster,
     decide_from_snapshot,
     flip7_decide,
     sabacc_decide,
 )
-from flip7.live import LiveMatch  # noqa: E402
-from flip7.server import HeliosHandler, set_match, apply_computers  # noqa: E402
+from holotable.live import LiveMatch  # noqa: E402
+from holotable.server import HeliosHandler, set_match, apply_computers  # noqa: E402
 
 
 class TestBotHelpers(unittest.TestCase):

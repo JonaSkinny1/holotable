@@ -1,6 +1,6 @@
 import unittest
 
-from flip7.deck import ACTION_CARDS, create_deck, numeric_score
+from holotable.deck import ACTION_CARDS, create_deck, numeric_score
 
 
 class TestDeck(unittest.TestCase):

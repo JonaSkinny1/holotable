@@ -5,9 +5,9 @@ import unittest
 from urllib import error, request
 from http.server import ThreadingHTTPServer
 
-from flip7.server import HeliosHandler, set_match, switch_game, get_game_id
-from flip7.live import LiveMatch
-from flip7.sabacc_live import SabaccLiveMatch
+from holotable.server import HeliosHandler, set_match, switch_game, get_game_id
+from holotable.live import LiveMatch
+from holotable.sabacc_live import SabaccLiveMatch
 
 
 class TestSabaccServer(unittest.TestCase):

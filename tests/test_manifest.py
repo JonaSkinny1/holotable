@@ -6,7 +6,7 @@ import json
 import random
 import unittest
 
-from flip7.manifest import (
+from holotable.manifest import (
     CATCH_FINE,
     COPIES_PER_GOOD,
     GOODS,
@@ -20,7 +20,7 @@ from flip7.manifest import (
     market_points,
     points_for_count,
 )
-from flip7.manifest_live import ManifestLiveMatch
+from holotable.manifest_live import ManifestLiveMatch
 
 
 def _uids(cards):
