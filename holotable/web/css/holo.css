@@ -769,7 +769,7 @@ a { color: var(--teal-bright); }
   color: var(--muted);
 }
 
-/* Sabacc polarity on mini / pad cards — same teal, orange, and text as home */
+/* Stake polarity on mini / pad cards — same teal, orange, and text as home */
 .mini-card.pos, .card.pos {
   border-color: var(--teal);
   color: var(--teal-bright);
@@ -779,7 +779,7 @@ a { color: var(--teal-bright); }
   color: var(--orange-bright);
   background: var(--orange-dim);
 }
-.mini-card.sylop, .card.sylop {
+.mini-card.zero, .card.zero {
   border-color: var(--text);
   color: var(--text);
   box-shadow: 0 0 12px rgba(242, 246, 251, 0.28);
@@ -787,7 +787,7 @@ a { color: var(--teal-bright); }
 
 .card.pos .rank { color: var(--teal-bright); }
 .card.neg .rank { color: var(--orange-bright); }
-.card.sylop .rank { color: var(--text); }
+.card.zero .rank { color: var(--text); }
 
 kbd {
   font-family: var(--mono);

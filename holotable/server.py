@@ -1,7 +1,7 @@
 """Holotable server — static UI + REST + WebSocket broadcast.
 
 Software only (no actuators / MQTT). Serves the five-station Holotable.
-The Games station runs Flip 7, Sabacc, or MANIFEST from one menu.
+The Games station runs Flip 7, Stake, or MANIFEST from one menu.
 Computer opponents auto-act server-side (no datapad required).
 """
 
@@ -20,12 +20,12 @@ from typing import Any, Dict, List, Optional, Set, Union
 from .bots import BOT_NAMES, build_roster, decide_from_snapshot
 from .live import DEFAULT_CREW, LiveMatch
 from .manifest_live import ManifestLiveMatch
-from .sabacc_live import SabaccLiveMatch
+from .stake_live import StakeLiveMatch
 from . import wsutil
 
 STATIC_DIR = Path(__file__).resolve().parent / "web"
 
-MatchType = Union[LiveMatch, SabaccLiveMatch, ManifestLiveMatch]
+MatchType = Union[LiveMatch, StakeLiveMatch, ManifestLiveMatch]
 
 _state_lock = threading.Lock()
 _game_id = "flip7"
@@ -67,8 +67,8 @@ def set_match(m: MatchType, game_id: Optional[str] = None, computers: Optional[i
         _match = m
         if game_id is not None:
             _game_id = game_id
-        elif isinstance(m, SabaccLiveMatch):
-            _game_id = "sabacc"
+        elif isinstance(m, StakeLiveMatch):
+            _game_id = "stake"
         elif isinstance(m, ManifestLiveMatch):
             _game_id = "manifest"
         else:
@@ -112,16 +112,16 @@ def normalize_game(game: str) -> str:
     g = (game or "").strip().lower()
     if g in ("flip7", "reactor", "reactor_overload", "flip"):
         return "flip7"
-    if g in ("sabacc", "spike", "corellian"):
-        return "sabacc"
+    if g == "stake":
+        return "stake"
     if g == "manifest":
         return "manifest"
-    raise ValueError("Unknown game — use flip7, sabacc, or manifest")
+    raise ValueError("Unknown game — use flip7, stake, or manifest")
 
 
 def _make_match(game: str, names: List[str], rng, bot_seats: Set[int]) -> MatchType:
-    if game == "sabacc":
-        return SabaccLiveMatch(names, rng=rng, bot_seats=bot_seats)
+    if game == "stake":
+        return StakeLiveMatch(names, rng=rng, bot_seats=bot_seats)
     if game == "manifest":
         return ManifestLiveMatch(names, rng=rng, bot_seats=bot_seats)
     return LiveMatch(names, rng=rng, bot_seats=bot_seats)
@@ -132,7 +132,7 @@ def _clamp_names(game: str, names: List[str]) -> List[str]:
         if not (2 <= len(names) <= 6):
             return list(DEFAULT_CREW[: max(2, min(4, len(names) or 2))])
         return names
-    # Sabacc and MANIFEST: 2–4 seats
+    # Stake and MANIFEST: 2–4 seats
     if len(names) > 4:
         names = names[:4]
     if len(names) < 2:
@@ -146,7 +146,7 @@ def switch_game(
     seed: Optional[int] = None,
     computers: Optional[int] = None,
 ) -> dict:
-    """Start a new Flip 7, Sabacc, or MANIFEST match on the Holotable."""
+    """Start a new Flip 7, Stake, or MANIFEST match on the Holotable."""
     g = normalize_game(game)
 
     n_comp = get_computers() if computers is None else max(0, min(3, int(computers)))
@@ -405,7 +405,7 @@ class HolotableHandler(BaseHTTPRequestHandler):
                         "app": "Holotable",
                         "shell": "HOLOTABLE",
                         "outpost": "Ohio Outpost // Sol-3",
-                        "games": ["flip7", "sabacc", "manifest"],
+                        "games": ["flip7", "stake", "manifest"],
                         "active_game": get_game_id(),
                         "computers": get_computers(),
                         "bot_names": list(BOT_NAMES[:3]),
@@ -419,7 +419,7 @@ class HolotableHandler(BaseHTTPRequestHandler):
                     {
                         "games": [
                             {"id": "flip7", "title": "Flip 7"},
-                            {"id": "sabacc", "title": "Sabacc (Spike house rules)"},
+                            {"id": "stake", "title": "Stake"},
                             {"id": "manifest", "title": "MANIFEST"},
                         ],
                         "active": get_game_id(),
@@ -673,7 +673,7 @@ def _dispatch_ws(client: WsClient, msg: dict) -> None:
 
 
 def main(argv: Optional[List[str]] = None) -> None:
-    parser = argparse.ArgumentParser(description="Holotable — Flip 7 / Sabacc / MANIFEST server")
+    parser = argparse.ArgumentParser(description="Holotable — Flip 7 / Stake / MANIFEST server")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8766)
     parser.add_argument("--players", type=int, default=2, help="2–4 crew seats at boot (ignored if --computers set)")
@@ -686,7 +686,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     parser.add_argument(
         "--game",
         default="flip7",
-        choices=("flip7", "sabacc", "manifest"),
+        choices=("flip7", "stake", "manifest"),
         help="Boot game on the Games tab (default flip7)",
     )
     args = parser.parse_args(argv)
@@ -699,8 +699,8 @@ def main(argv: Optional[List[str]] = None) -> None:
         names = DEFAULT_CREW[:n] if n <= len(DEFAULT_CREW) else [f"Crew {i+1}" for i in range(n)]
         bot_seats = set()
 
-    if args.game == "sabacc":
-        set_match(SabaccLiveMatch(names, bot_seats=bot_seats), game_id="sabacc", computers=n_comp)
+    if args.game == "stake":
+        set_match(StakeLiveMatch(names, bot_seats=bot_seats), game_id="stake", computers=n_comp)
     elif args.game == "manifest":
         set_match(ManifestLiveMatch(names, bot_seats=bot_seats), game_id="manifest", computers=n_comp)
     else:

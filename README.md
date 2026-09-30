@@ -1,10 +1,8 @@
 # Holotable
 
-The app is **Holotable**. **Flip 7**, **Sabacc**, and **MANIFEST** are games on it. The public table has five stations: Weather, Nav, Games, Bio, and Comms. Private datapads drive the active game.
+The app is **Holotable**. **Flip 7**, **Stake**, and **MANIFEST** are games on it. The public table has five stations: Weather, Nav, Games, Bio, and Comms. Private datapads drive the active game.
 
 Software only in this repo — no physical Pepper’s Ghost hardware, actuators, or MQTT.
-
-**Sabacc disclaimer:** fan/home private-table house rules only. **Not a licensed Lucasfilm product.**
 
 ## Holotable and its games
 
@@ -12,7 +10,7 @@ Software only in this repo — no physical Pepper’s Ghost hardware, actuators,
 | --- | --- |
 | **Holotable** | The app. Public table: **WEATHER · NAV · GAMES · BIO · COMMS** (keys `1`–`5`). Black / teal / hazard chrome for Pepper’s Ghost demos (**Ohio Outpost // Sol-3**). |
 | **Flip 7** | A game on the Games tab. Deck and scoring are Flip 7. Action cards show as Containment Lock, Overcharge Pulse, and Neutralizer Shield. Race to **200**. The game id stays `flip7`. |
-| **Sabacc** | A game on the same Games tab: +/- cards, goal near **0**, bomb-out if \|sum\| > 23, race to **100**. |
+| **Stake** | A game on the same Games tab: +/- cards, goal near **0**, bomb-out if \|sum\| > 23, race to **100**. |
 | **MANIFEST** | A game on the same Games tab. Original. Sell one hand card, name it, buyer pays 2. Optional look for 1. Highest coins + market after 8 rounds, or when the table ends the game. |
 | **Other stations** | Polished **MOCK** stubs (solar/Kp, Earth/ISS orbit, vials SP-01–SP-08, frequency dial). Live APIs optional later. |
 
@@ -27,7 +25,7 @@ python3 -m holotable --players 4
 
 ```bash
 python3 -m holotable.server
-# optional: --host 0.0.0.0 --port 8766 --players 3 --game sabacc
+# optional: --host 0.0.0.0 --port 8766 --players 3 --game stake
 ```
 
 Then open:
@@ -60,10 +58,10 @@ REST: `POST /api/computers` with `{"computers":2}`. WebSocket: `{"type":"set_com
 
 ### Switch games
 
-- On the **Games** tab (or datapad): choose **Flip 7**, **Sabacc**, or **MANIFEST** from the one menu.
-- REST: `POST /api/game` with `{"game":"sabacc"}`, `{"game":"flip7"}`, or `{"game":"manifest"}`.
+- On the **Games** tab (or datapad): choose **Flip 7**, **Stake**, or **MANIFEST** from the one menu.
+- REST: `POST /api/game` with `{"game":"stake"}`, `{"game":"flip7"}`, or `{"game":"manifest"}`.
 - WebSocket: `{"type":"set_game","game":"manifest"}`.
-- Boot: `python3 -m holotable.server --game sabacc` or `--game manifest`.
+- Boot: `python3 -m holotable.server --game stake` or `--game manifest`.
 
 ### MANIFEST
 
@@ -105,16 +103,14 @@ python3 -m unittest discover -s tests -v
 - Seven unique numbers → `sum + 15` (**Flip 7**) and end the turn.
 - First to **200** wins.
 
-## Rules — Sabacc (Holotable house / Spike-inspired)
-
-Fan/home private table — **not** a Lucasfilm product.
+## Rules — Stake
 
 - **Players:** 2–4.
-- **Deck:** two copies of each integer from **−10..−1** and **+1..+10**, plus two **Sylop** cards (value **0**). 42 cards.
-- **Goal:** end your turn with a hand total as close to **0** as possible (Corellian Spike–inspired).
+- **Deck:** two copies of each integer from **−10..−1** and **+1..+10**, plus two **Null** cards (value **0**). 42 cards.
+- **Goal:** end your turn with a hand total as close to **0** as possible.
 - **Deal:** two opening cards each turn; then **Draw** (hit) or **Stand** (stay).
 - **Bomb-out:** if `|hand total| > 23` after any draw, you bust and score **0** for the turn.
-- **Stand scoring:** `24 − |total|` (so exact **0** / Pure Sabacc = **24** points).
+- **Stand scoring:** `24 − |total|` (so exact **0** / Pure Stake = **24** points).
 - **Match:** first to **100** wins.
 - Actions reuse the same datapad Hit / Stay buttons and `/api/hit` · `/api/stay` endpoints.
 
@@ -124,13 +120,13 @@ Games tab and datapad polish for kiosk / dark-room viewing:
 
 - **Table:** match HUD (game · turn · race target), clearer crew piles with **TURN** badge, higher teal/orange contrast.
 - **Pad:** large Hit/Stay targets, **Your turn** banner, help collapsed under details.
-- **Games tab:** one menu for Flip 7, Sabacc, and MANIFEST. Score card: number tiles, player totals, Bonus row.
+- **Games tab:** one menu for Flip 7, Stake, and MANIFEST. Score card: number tiles, player totals, Bonus row.
 
 Details: `holotable/BRIDGE.md` (UX notes).
 
 ## Architecture
 
-- `holotable/` — the app package. Flip 7 lives in `deck`, `game`, `turn`, and `live` (the game is still Flip 7; its id is `flip7`). Sabacc (`sabacc`, `sabacc_live`), MANIFEST (`manifest`, `manifest_live`), computer opponents (`bots`), and `server` (`python -m holotable.server`).
+- `holotable/` — the app package. Flip 7 lives in `deck`, `game`, `turn`, and `live` (the game is still Flip 7; its id is `flip7`). Stake (`stake`, `stake_live`), MANIFEST (`manifest`, `manifest_live`), computer opponents (`bots`), and `server` (`python -m holotable.server`).
 - `holotable/web/` — Holotable static UI (`index.html`, `pad.html`, `css/`, `js/`).
 - See `holotable/BRIDGE.md`.
 
@@ -140,7 +136,7 @@ The GitHub repository is still named `flip-7`. It should be renamed to `holotabl
 
 - [x] Terminal multiplayer rules engine
 - [x] Holotable five-station shell + Flip 7 on the Games tab
-- [x] Sabacc and MANIFEST on that same Games tab
+- [x] Stake and MANIFEST on that same Games tab
 - [x] MANIFEST on the same Holotable server
 - [x] Computer opponents (solo / fill seats; server-driven)
 - [ ] Godot 4 table UI / Pepper’s Ghost layout (phase 2)

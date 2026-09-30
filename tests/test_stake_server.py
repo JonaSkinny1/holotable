@@ -7,10 +7,10 @@ from http.server import ThreadingHTTPServer
 
 from holotable.server import HolotableHandler, set_match, switch_game, get_game_id
 from holotable.live import LiveMatch
-from holotable.sabacc_live import SabaccLiveMatch
+from holotable.stake_live import StakeLiveMatch
 
 
-class TestSabaccServer(unittest.TestCase):
+class TestStakeServer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         set_match(LiveMatch(["Pilot", "Engineer"], rng=random.Random(99)), game_id="flip7")
@@ -44,23 +44,23 @@ class TestSabaccServer(unittest.TestCase):
         except error.HTTPError as e:
             return e.code, json.loads(e.read().decode())
 
-    def test_switch_to_sabacc(self):
-        code, state = self._post("/api/game", {"game": "sabacc", "players": ["A", "B"], "seed": 3})
+    def test_switch_to_stake(self):
+        code, state = self._post("/api/game", {"game": "stake", "players": ["A", "B"], "seed": 3})
         self.assertEqual(code, 200)
-        self.assertEqual(state.get("rules"), "sabacc")
-        self.assertEqual(state.get("title"), "Sabacc")
+        self.assertEqual(state.get("rules"), "stake")
+        self.assertEqual(state.get("title"), "Stake")
         self.assertIn("hand_sum", state)
-        self.assertEqual(get_game_id(), "sabacc")
+        self.assertEqual(get_game_id(), "stake")
 
         code, health = self._get("/api/health")
-        self.assertEqual(health.get("active_game"), "sabacc")
+        self.assertEqual(health.get("active_game"), "stake")
         self.assertEqual(health.get("outpost"), "Ohio Outpost // Sol-3")
 
         code, games = self._get("/api/games")
-        self.assertEqual(games.get("active"), "sabacc")
+        self.assertEqual(games.get("active"), "stake")
         ids = [g["id"] for g in games["games"]]
         self.assertIn("flip7", ids)
-        self.assertIn("sabacc", ids)
+        self.assertIn("stake", ids)
 
     def test_switch_back_flip7(self):
         code, state = self._post("/api/game", {"game": "flip7", "players": ["X", "Y"], "seed": 2})
@@ -72,7 +72,7 @@ class TestSabaccServer(unittest.TestCase):
         with request.urlopen(self.base + "/", timeout=3) as resp:
             body = resp.read().decode()
             self.assertIn("game-picker", body)
-            self.assertIn("Sabacc", body)
+            self.assertIn("Stake", body)
             self.assertNotIn("Youngstown", body)
             self.assertIn("Ohio Outpost", body)
 

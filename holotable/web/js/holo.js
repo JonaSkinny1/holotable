@@ -1,5 +1,5 @@
 /**
- * Holotable client — WebSocket state + REST fallback for Flip 7, Sabacc, and MANIFEST.
+ * Holotable client — WebSocket state + REST fallback for Flip 7, Stake, and MANIFEST.
  * Weather, Nav, Bio, and Comms are local mock demos (labeled).
  */
 (function (global) {
@@ -233,16 +233,16 @@
     if (label === "Containment Lock" || label === "FREEZE") return "LOCK";
     if (label === "Overcharge Pulse" || label === "FLIP_THREE") return "PULSE";
     if (label === "Neutralizer Shield" || label === "SECOND_CHANCE") return "SHIELD";
-    if (label === "Sylop" || label === "SYLOP") return "Ø";
+    if (label === "Null" || label === "NULL") return "Ø";
     return String(label);
   }
 
   function isActionLabel(label) {
-    return /Lock|Pulse|Shield|FREEZE|FLIP|SECOND|Sylop/i.test(String(label));
+    return /Lock|Pulse|Shield|FREEZE|FLIP|SECOND|Null/i.test(String(label));
   }
 
-  function isSabacc(state) {
-    return state && (state.rules === "sabacc" || state.game === "sabacc");
+  function isStake(state) {
+    return state && (state.rules === "stake" || state.game === "stake");
   }
 
   function isManifest(state) {
@@ -251,7 +251,7 @@
 
   function rulesId(state) {
     if (isManifest(state)) return "manifest";
-    if (isSabacc(state)) return "sabacc";
+    if (isStake(state)) return "stake";
     return "flip7";
   }
 
@@ -294,7 +294,7 @@
       });
       heart = { icon: "♥", label: "Pair", on: pair };
       star = { icon: "★", label: "Three", on: triple };
-    } else if (rules === "sabacc") {
+    } else if (rules === "stake") {
       (state.hand || []).forEach(function (c) { tiles.push(cardShort(c)); });
       const sum = Number(state.hand_sum || 0);
       const limit = Number(state.bomb_limit || 23);
@@ -380,7 +380,7 @@
 
   function cardPolarity(label) {
     const s = String(label || "");
-    if (s === "Sylop" || s === "SYLOP" || s === "Ø" || s === "0") return "sylop";
+    if (s === "Null" || s === "NULL" || s === "Ø" || s === "0") return "zero";
     if (/^\+\d/.test(s) || (s !== "" && !s.startsWith("-") && /^\d+$/.test(s) && Number(s) > 0))
       return "pos";
     if (/^-\d/.test(s)) return "neg";
@@ -418,7 +418,7 @@
     connect: connect,
     cardShort: cardShort,
     isActionLabel: isActionLabel,
-    isSabacc: isSabacc,
+    isStake: isStake,
     isManifest: isManifest,
     rulesId: rulesId,
     goodName: goodName,

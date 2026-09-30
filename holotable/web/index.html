@@ -66,7 +66,7 @@
         <label class="game-one" for="game-picker">All games</label>
         <select id="game-picker" aria-label="Choose a game">
           <option value="flip7" data-game="flip7">Flip 7</option>
-          <option value="sabacc" data-game="sabacc">Sabacc</option>
+          <option value="stake" data-game="stake">Stake</option>
           <option value="manifest" data-game="manifest">MANIFEST</option>
         </select>
         <p class="legend" id="game-disclaimer">
@@ -186,12 +186,11 @@
         "Second Chance → <strong>Neutralizer Shield</strong><br />" +
         "Seven unique → <strong>Flip 7</strong> (+15)";
 
-      const SABACC_LEGEND =
-        "Goal: hand total nearest <strong>0</strong> (Spike).<br />" +
+      const STAKE_LEGEND =
+        "Goal: hand total nearest <strong>0</strong>.<br />" +
         "Bomb-out if <strong>|sum| &gt; 23</strong>.<br />" +
-        "Stand scores <strong>24 − |sum|</strong> (Pure Sabacc = 24).<br />" +
-        "First to <strong>100</strong>. 2–4 players.<br />" +
-        "<em>House rules · not Lucasfilm licensed</em>";
+        "Stand scores <strong>24 − |sum|</strong> (Pure Stake = 24).<br />" +
+        "First to <strong>100</strong>. 2–4 players.";
 
       function showStation(id) {
         current = id;
@@ -389,7 +388,7 @@
 
       function renderReactor(state) {
         const rules = Holo.rulesId(state);
-        const sabacc = rules === "sabacc";
+        const stake = rules === "stake";
         const manifest = rules === "manifest";
         syncPicker(rules);
         Holo.renderScoreCard(document.getElementById("score-card"), state);
@@ -402,16 +401,16 @@
           renderManifest(state);
           return;
         }
-        document.getElementById("game-disclaimer").textContent = sabacc
-          ? "Fan/home private table. Sabacc here is a simplified house game — not a licensed Lucasfilm product."
+        document.getElementById("game-disclaimer").textContent = stake
+          ? "Stake on the Holotable. Nearest zero. First to 100."
           : "Flip 7 on the Holotable. First to 200.";
 
-        const gameTitle = sabacc ? "Sabacc" : "Flip 7";
-        document.getElementById("reactor-title").textContent = sabacc
-          ? "Sabacc · Spike house rules"
+        const gameTitle = stake ? "Stake" : "Flip 7";
+        document.getElementById("reactor-title").textContent = stake
+          ? "Stake"
           : "Flip 7";
         document.getElementById("hud-game").textContent = gameTitle;
-        document.getElementById("hud-target").textContent = sabacc
+        document.getElementById("hud-target").textContent = stake
           ? "Race to " + (state.target || 100)
           : "Race to " + (state.target || 200);
 
@@ -425,17 +424,17 @@
           turnEl.textContent = "Standby";
         }
 
-        document.getElementById("core-label").textContent = sabacc
+        document.getElementById("core-label").textContent = stake
           ? (state.hand_sum !== undefined ? "Hand sum" : "Potential")
           : "Turn charge";
-        document.getElementById("turn-score").textContent = sabacc
+        document.getElementById("turn-score").textContent = stake
           ? (state.hand_sum !== undefined ? (state.hand_sum > 0 ? "+" : "") + state.hand_sum : state.turn_score)
           : state.turn_score;
-        document.getElementById("rules-legend").innerHTML = sabacc ? SABACC_LEGEND : FLIP7_LEGEND;
+        document.getElementById("rules-legend").innerHTML = stake ? STAKE_LEGEND : FLIP7_LEGEND;
         document.getElementById("scores-heading").textContent = "Rules";
 
         const sumLine = document.getElementById("hand-sum-line");
-        if (sabacc) {
+        if (stake) {
           sumLine.hidden = false;
           const hs = state.hand_sum || 0;
           document.getElementById("hand-sum").textContent = (hs > 0 ? "+" : "") + hs +
@@ -447,8 +446,8 @@
         document.getElementById("last-flip").textContent = Holo.cardShort(state.last_flip);
         document.getElementById("last-hint").textContent =
           state.last_flip && state.last_flip !== "—"
-            ? state.last_flip + (!sabacc && state.shield ? " · Neutralizer Shield armed" : "")
-            : (sabacc ? "awaiting draw" : "awaiting flux");
+            ? state.last_flip + (!stake && state.shield ? " · Neutralizer Shield armed" : "")
+            : (stake ? "awaiting draw" : "awaiting flux");
         document.getElementById("status").textContent = state.status || "";
         const core = document.getElementById("reactor-core");
         core.classList.toggle("bust", /bust|bomb/i.test(state.status || ""));
@@ -458,7 +457,7 @@
         (state.hand || []).forEach(function (c) {
           const el = document.createElement("div");
           let cls = "mini-card";
-          if (sabacc) {
+          if (stake) {
             const pol = Holo.cardPolarity(c);
             if (pol) cls += " " + pol;
           } else if (Holo.isActionLabel(c)) {

@@ -1,4 +1,4 @@
-"""Live Sabacc match on the Holotable (same hit/stay surface as Flip 7)."""
+"""Live Stake match on the Holotable (same hit/stay surface as Flip 7)."""
 
 from __future__ import annotations
 
@@ -6,19 +6,19 @@ import random
 import threading
 from typing import Any, Callable, Dict, List, Optional, Set
 
-from .sabacc import (
-    SabaccGame,
-    SabaccPlayer,
-    SabaccTurnController,
-    display_sabacc_card,
+from .stake import (
+    StakeGame,
+    StakePlayer,
+    StakeTurnController,
+    display_stake_card,
     hand_total,
 )
 
 DEFAULT_CREW = ["Pilot", "Engineer", "Gunner", "Science"]
 
 
-class SabaccLiveMatch:
-    """Thread-safe Sabacc match — API mirrors LiveMatch (hit / stay / new_match / snapshot)."""
+class StakeLiveMatch:
+    """Thread-safe Stake match — API mirrors LiveMatch (hit / stay / new_match / snapshot)."""
 
     def __init__(
         self,
@@ -33,12 +33,12 @@ class SabaccLiveMatch:
                 names = DEFAULT_CREW[:2]
         self._lock = threading.RLock()
         self._listeners: List[Callable[[dict], None]] = []
-        self.game = SabaccGame(names[:4] if len(names) > 4 else names, rng=rng)
+        self.game = StakeGame(names[:4] if len(names) > 4 else names, rng=rng)
         self.bot_seats: Set[int] = set(bot_seats or ())
-        self.turn: Optional[SabaccTurnController] = None
+        self.turn: Optional[StakeTurnController] = None
         self.phase = "lobby"
-        self.winner: Optional[SabaccPlayer] = None
-        self.status = "Holotable online — Sabacc toward 0"
+        self.winner: Optional[StakePlayer] = None
+        self.status = "Holotable online — Stake toward 0"
         self.match_id = 1
         self._begin_turn_unlocked()
 
@@ -70,15 +70,15 @@ class SabaccLiveMatch:
         with self._lock:
             names = player_names or [p.name for p in self.game.players]
             if not 2 <= len(names) <= 4:
-                raise ValueError("Sabacc needs 2–4 player names")
+                raise ValueError("Stake needs 2–4 player names")
             rng = random.Random(seed) if seed is not None else random.Random()
-            self.game = SabaccGame(names, rng=rng)
+            self.game = StakeGame(names, rng=rng)
             if bot_seats is not None:
                 self.bot_seats = set(bot_seats)
             self.turn = None
             self.winner = None
             self.match_id += 1
-            self.status = "New Sabacc shuffle"
+            self.status = "New Stake shuffle"
             self._begin_turn_unlocked()
             snap = self.snapshot()
         self._notify()
@@ -117,7 +117,7 @@ class SabaccLiveMatch:
             if self.winner:
                 self.phase = "won"
                 return
-            self.turn = SabaccTurnController(game=self.game)
+            self.turn = StakeTurnController(game=self.game)
             self.phase = "resolving"
             result = self.turn.start()
             if result is None:
@@ -138,7 +138,7 @@ class SabaccLiveMatch:
         if result.busted:
             tag = "bomb-out"
         elif result.pure:
-            tag = "Pure Sabacc"
+            tag = "Pure Stake"
         else:
             tag = f"sum {result.total:+d}"
         winner = self.game.apply_turn(result)
@@ -147,7 +147,7 @@ class SabaccLiveMatch:
         if winner:
             self.winner = winner
             self.phase = "won"
-            self.status = f"{winner.name} wins with {winner.score} — Sabacc complete"
+            self.status = f"{winner.name} wins with {winner.score} — Stake complete"
             return
         self.phase = "between"
 
@@ -176,13 +176,13 @@ class SabaccLiveMatch:
             computers = len(self.bot_seats)
             return {
                 "station": "REACTOR",
-                "title": "Sabacc",
-                "rules": "sabacc",
-                "game": "sabacc",
+                "title": "Stake",
+                "rules": "stake",
+                "game": "stake",
                 "match_id": self.match_id,
                 "phase": self.phase,
-                "target": SabaccGame.TARGET,
-                "bomb_limit": SabaccGame.BOMB_LIMIT,
+                "target": StakeGame.TARGET,
+                "bomb_limit": StakeGame.BOMB_LIMIT,
                 "goal": 0,
                 "status": self.status,
                 "active_seat": g.current,
@@ -207,17 +207,17 @@ class SabaccLiveMatch:
                     for i, p in enumerate(g.players)
                 ],
                 "computers": computers,
-                "hand": [display_sabacc_card(c) for c in hand],
+                "hand": [display_stake_card(c) for c in hand],
                 "hand_raw": hand,
                 "hand_sum": hand_sum,
                 "turn_score": t.turn_score if t and not t.done else 0,
                 "shield": False,
                 "forced_draws": 0,
-                "last_flip": display_sabacc_card(last) if last is not None else "—",
+                "last_flip": display_stake_card(last) if last is not None else "—",
                 "last_flip_raw": last,
                 "log": list(t.log[-8:] if t else []),
                 "can_act": self.phase == "choosing" and not self.winner,
                 "reskin": {},
                 "deck_remaining": len(g.deck),
-                "disclaimer": "Fan/home private table — not a licensed Lucasfilm product",
+                "disclaimer": "Stake. Nearest zero.",
             }
