@@ -1,6 +1,6 @@
 /**
- * Helios client — WebSocket state + REST fallback for Reactor Overload / Sabacc.
- * Non-REACTOR stations are local mock demos (labeled).
+ * Holotable client — WebSocket state + REST fallback for Flip 7, Sabacc, and MANIFEST.
+ * Weather, Nav, Bio, and Comms are local mock demos (labeled).
  */
 (function (global) {
   "use strict";

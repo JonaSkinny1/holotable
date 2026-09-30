@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Helios — Ohio Outpost // Sol-3 Holotable</title>
+  <title>Holotable — Ohio Outpost // Sol-3</title>
   <link rel="stylesheet" href="css/holo.css" />
 </head>
-<body class="helios">
-  <header class="helios-top">
-    <div class="helios-brand">
-      <span class="name">Helios</span>
+<body class="holotable">
+  <header class="holotable-top">
+    <div class="holotable-brand">
+      <span class="name">Holotable</span>
       <span class="sub">Ohio Outpost // Sol-3 · Pepper’s Ghost table</span>
     </div>
     <nav class="station-bar" aria-label="Stations">
@@ -65,12 +65,12 @@
         <h2>Games</h2>
         <label class="game-one" for="game-picker">All games</label>
         <select id="game-picker" aria-label="Choose a game">
-          <option value="flip7" data-game="flip7">Reactor Overload</option>
+          <option value="flip7" data-game="flip7">Flip 7</option>
           <option value="sabacc" data-game="sabacc">Sabacc</option>
           <option value="manifest" data-game="manifest">MANIFEST</option>
         </select>
         <p class="legend" id="game-disclaimer">
-          Fan/home private table. Sabacc here is a simplified house game — not a licensed Lucasfilm product.
+          Flip 7 on the Holotable. First to 200.
         </p>
       </div>
 
@@ -89,7 +89,7 @@
       </div>
 
       <div class="match-hud" id="match-hud" aria-live="polite">
-        <div class="hud-game" id="hud-game">Reactor Overload</div>
+        <div class="hud-game" id="hud-game">Flip 7</div>
         <div class="hud-turn" id="hud-turn">Standby</div>
         <div class="hud-target" id="hud-target">Race to 200</div>
       </div>
@@ -109,7 +109,7 @@
 
       <div class="reactor-grid" id="reactor-grid">
         <div class="panel reactor-core-wrap">
-          <h2 id="reactor-title">Reactor Overload · Flip 7 rules</h2>
+          <h2 id="reactor-title">Flip 7</h2>
           <div class="reactor-core" id="reactor-core">
             <span class="core-label" id="core-label">Turn charge</span>
             <span class="core-value" id="turn-score">0</span>
@@ -128,11 +128,11 @@
             Freeze → <strong>Containment Lock</strong><br />
             Flip 3 → <strong>Overcharge Pulse</strong><br />
             Second Chance → <strong>Neutralizer Shield</strong><br />
-            Seven unique → <strong>Reactor Overload</strong> (+15)
+            Seven unique → <strong>Flip 7</strong> (+15)
           </p>
         </aside>
       </div>
-      <div class="status-bar" id="status" role="status">Reactor standby</div>
+      <div class="status-bar" id="status" role="status">Holotable standby</div>
       <p class="todo">
         Solo: set <strong>Computers</strong> above, open
         <a href="pad.html?seat=0">pad seat 0</a>.
@@ -168,7 +168,7 @@
     </section>
   </main>
 
-  <footer class="foot-hint">HELIOS · Ohio ground station · software holotable · no actuators / MQTT in this build</footer>
+  <footer class="foot-hint">HOLOTABLE · Ohio ground station · no actuators / MQTT in this build</footer>
 
   <script src="js/holo.js"></script>
   <script>
@@ -184,7 +184,7 @@
         "Freeze → <strong>Containment Lock</strong><br />" +
         "Flip 3 → <strong>Overcharge Pulse</strong><br />" +
         "Second Chance → <strong>Neutralizer Shield</strong><br />" +
-        "Seven unique → <strong>Reactor Overload</strong> (+15)";
+        "Seven unique → <strong>Flip 7</strong> (+15)";
 
       const SABACC_LEGEND =
         "Goal: hand total nearest <strong>0</strong> (Spike).<br />" +
@@ -402,13 +402,14 @@
           renderManifest(state);
           return;
         }
-        document.getElementById("game-disclaimer").textContent =
-          "Fan/home private table. Sabacc here is a simplified house game — not a licensed Lucasfilm product.";
+        document.getElementById("game-disclaimer").textContent = sabacc
+          ? "Fan/home private table. Sabacc here is a simplified house game — not a licensed Lucasfilm product."
+          : "Flip 7 on the Holotable. First to 200.";
 
-        const gameTitle = sabacc ? "Sabacc" : "Reactor Overload";
+        const gameTitle = sabacc ? "Sabacc" : "Flip 7";
         document.getElementById("reactor-title").textContent = sabacc
           ? "Sabacc · Spike house rules"
-          : "Reactor Overload · Flip 7 rules";
+          : "Flip 7";
         document.getElementById("hud-game").textContent = gameTitle;
         document.getElementById("hud-target").textContent = sabacc
           ? "Race to " + (state.target || 100)

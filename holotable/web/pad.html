@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Helios Datapad — Table Games</title>
+  <title>Holotable Datapad</title>
   <link rel="stylesheet" href="css/holo.css" />
 </head>
 <body>
@@ -19,7 +19,7 @@
       <h2>Games</h2>
       <label class="game-one" for="game-picker">All games</label>
       <select id="game-picker" aria-label="Choose a game">
-        <option value="flip7" data-game="flip7">Reactor Overload</option>
+        <option value="flip7" data-game="flip7">Flip 7</option>
         <option value="sabacc" data-game="sabacc">Sabacc</option>
         <option value="manifest" data-game="manifest">MANIFEST</option>
       </select>
@@ -87,7 +87,7 @@
           MANIFEST: sell one hand card, name it, buyer pays 2. Look costs 1.
           No look or a match stands as named. A miss fails and you pay 3, or whatever you have.
           Public table:
-          <a href="index.html#REACTOR">Holotable REACTOR</a>.
+          <a href="index.html#REACTOR">Holotable Games</a>.
           Seat via <code>?seat=0</code>, <code>?seat=1</code>, …
         </p>
       </details>
@@ -323,10 +323,10 @@
         document.getElementById("pad-todo").innerHTML = sabacc
           ? "Sabacc house rules (Spike toward 0). Bomb-out if |sum| &gt; 23. " +
             "Fan/home private table — not a licensed Lucasfilm product. " +
-            'Public: <a href="index.html#REACTOR">Helios REACTOR</a>.'
+            'Public: <a href="index.html#REACTOR">Holotable Games</a>.'
           : "Containment Lock / Overcharge Pulse / Neutralizer Shield resolve in the " +
             "Flip 7 rules on the Holotable. Public table: " +
-            '<a href="index.html#REACTOR">Helios REACTOR</a>. ' +
+            '<a href="index.html#REACTOR">Holotable Games</a>. ' +
             "Seat via <code>?seat=0</code>, <code>?seat=1</code>, …";
 
         const hand = document.getElementById("hand");
@@ -374,7 +374,7 @@
         const me = (s.players || []).find(function (p) { return p.seat === seat; });
         document.getElementById("pad-meta").textContent =
           (me ? me.name + " · " + me.score + " pts" : "Seat " + seat) +
-          " · " + (s.title || (sabacc ? "Sabacc" : "Reactor Overload")) +
+          " · " + (s.title || (sabacc ? "Sabacc" : "Flip 7")) +
           (s.status ? " · " + s.status : "");
       }
 

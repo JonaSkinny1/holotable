@@ -1,7 +1,7 @@
-"""Helios holotable server — static UI + REST + WebSocket broadcast.
+"""Holotable server — static UI + REST + WebSocket broadcast.
 
-Software only (no actuators / MQTT). Serves the five-station Helios shell;
-REACTOR station runs Flip 7 / Reactor Overload or Sabacc via a game picker.
+Software only (no actuators / MQTT). Serves the five-station Holotable.
+The Games station runs Flip 7, Sabacc, or MANIFEST from one menu.
 Computer opponents auto-act server-side (no datapad required).
 """
 
@@ -35,7 +35,15 @@ _clients: Set["WsClient"] = set()
 _clients_lock = threading.Lock()
 _bot_timer: Optional[threading.Timer] = None
 _bot_timer_lock = threading.Lock()
-_bot_delay_sec = float(os.environ.get("HELIOS_BOT_DELAY", "0.75"))  # default; overridden at schedule
+
+
+def _env_num(name: str, legacy: str, default: str) -> float:
+    """Read HOLOTABLE_* first. HELIOS_* remains so older shells still work."""
+    raw = os.environ.get(name, os.environ.get(legacy, default))
+    return float(raw)
+
+
+_bot_delay_sec = _env_num("HOLOTABLE_BOT_DELAY", "HELIOS_BOT_DELAY", "0.75")
 
 
 def get_match() -> MatchType:
@@ -138,7 +146,7 @@ def switch_game(
     seed: Optional[int] = None,
     computers: Optional[int] = None,
 ) -> dict:
-    """Start a new match of flip7, sabacc, or manifest on the REACTOR table."""
+    """Start a new Flip 7, Sabacc, or MANIFEST match on the Holotable."""
     g = normalize_game(game)
 
     n_comp = get_computers() if computers is None else max(0, min(3, int(computers)))
@@ -307,7 +315,7 @@ def _schedule_bot_if_needed(state: dict) -> None:
         return
     mid = state.get("match_id")
     try:
-        delay = float(os.environ.get("HELIOS_BOT_DELAY", str(_bot_delay_sec)))
+        delay = _env_num("HOLOTABLE_BOT_DELAY", "HELIOS_BOT_DELAY", str(_bot_delay_sec))
     except ValueError:
         delay = _bot_delay_sec
     timer = threading.Timer(delay, _run_bot_turn, args=(mid, seat))
@@ -360,11 +368,11 @@ def json_bytes(obj: Any, code: int = 200) -> tuple[int, bytes, str]:
     return code, body, "application/json; charset=utf-8"
 
 
-class HeliosHandler(BaseHTTPRequestHandler):
+class HolotableHandler(BaseHTTPRequestHandler):
     server_version = "Holotable/0.5"
 
     def log_message(self, fmt: str, *args) -> None:
-        if os.environ.get("HELIOS_VERBOSE"):
+        if os.environ.get("HOLOTABLE_VERBOSE") or os.environ.get("HELIOS_VERBOSE"):
             super().log_message(fmt, *args)
 
     def _cors(self) -> None:
@@ -385,6 +393,7 @@ class HeliosHandler(BaseHTTPRequestHandler):
         if path == "/ws":
             self._websocket(qs)
             return
+        # /api/reactor/* stays as a legacy alias. The station label is Games.
         if path in ("/api/state", "/api/reactor/state"):
             self._send(*json_bytes(_state_for_query(qs)))
             return
@@ -393,9 +402,9 @@ class HeliosHandler(BaseHTTPRequestHandler):
                 *json_bytes(
                     {
                         "ok": True,
-                        "shell": "HELIOS",
+                        "app": "Holotable",
+                        "shell": "HOLOTABLE",
                         "outpost": "Ohio Outpost // Sol-3",
-                        "reactor": "Reactor Overload",
                         "games": ["flip7", "sabacc", "manifest"],
                         "active_game": get_game_id(),
                         "computers": get_computers(),
@@ -409,7 +418,7 @@ class HeliosHandler(BaseHTTPRequestHandler):
                 *json_bytes(
                     {
                         "games": [
-                            {"id": "flip7", "title": "Reactor Overload (Flip 7)"},
+                            {"id": "flip7", "title": "Flip 7"},
                             {"id": "sabacc", "title": "Sabacc (Spike house rules)"},
                             {"id": "manifest", "title": "MANIFEST"},
                         ],
@@ -556,7 +565,7 @@ class HeliosHandler(BaseHTTPRequestHandler):
         _handle_ws(self, key, role, seat)
 
 
-def _handle_ws(handler: HeliosHandler, key: str, role: str, seat: Optional[int]) -> None:
+def _handle_ws(handler: HolotableHandler, key: str, role: str, seat: Optional[int]) -> None:
     sock = handler.request
     sock.sendall(wsutil.handshake_response(key))
     client = WsClient(sock, role, seat)
@@ -678,7 +687,7 @@ def main(argv: Optional[List[str]] = None) -> None:
         "--game",
         default="flip7",
         choices=("flip7", "sabacc", "manifest"),
-        help="Boot game on REACTOR (default flip7)",
+        help="Boot game on the Games tab (default flip7)",
     )
     args = parser.parse_args(argv)
 
@@ -697,10 +706,10 @@ def main(argv: Optional[List[str]] = None) -> None:
     else:
         set_match(LiveMatch(names, bot_seats=bot_seats), game_id="flip7", computers=n_comp)
 
-    httpd = ThreadingHTTPServer((args.host, args.port), HeliosHandler)
+    httpd = ThreadingHTTPServer((args.host, args.port), HolotableHandler)
     httpd.daemon_threads = True
     httpd.allow_reuse_address = True
-    print(f"Helios listening on http://{args.host}:{args.port}/")
+    print(f"Holotable listening on http://{args.host}:{args.port}/")
     print(f"  public table:  http://{args.host}:{args.port}/")
     print(f"  datapad seat0: http://{args.host}:{args.port}/pad.html?seat=0")
     print(f"  datapad seat1: http://{args.host}:{args.port}/pad.html?seat=1")

@@ -1,4 +1,4 @@
-"""Live Sabacc match for Helios REACTOR station (same hit/stay surface as LiveMatch)."""
+"""Live Sabacc match on the Holotable (same hit/stay surface as Flip 7)."""
 
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ class SabaccLiveMatch:
         self.turn: Optional[SabaccTurnController] = None
         self.phase = "lobby"
         self.winner: Optional[SabaccPlayer] = None
-        self.status = "Helios Sabacc online — Spike toward 0"
+        self.status = "Holotable online — Sabacc toward 0"
         self.match_id = 1
         self._begin_turn_unlocked()
 

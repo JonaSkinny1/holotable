@@ -11,14 +11,14 @@ from urllib import error, request
 
 from holotable.live import LiveMatch
 from holotable.manifest import GOODS
-from holotable.server import HeliosHandler, get_game_id, set_match
+from holotable.server import HolotableHandler, get_game_id, set_match
 
 
 class TestManifestServer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         set_match(LiveMatch(["Pilot", "Engineer"], rng=random.Random(2)), game_id="flip7")
-        cls.httpd = ThreadingHTTPServer(("127.0.0.1", 0), HeliosHandler)
+        cls.httpd = ThreadingHTTPServer(("127.0.0.1", 0), HolotableHandler)
         cls.httpd.daemon_threads = True
         cls.port = cls.httpd.server_address[1]
         cls.thread = threading.Thread(target=cls.httpd.serve_forever, daemon=True)

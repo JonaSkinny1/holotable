@@ -12,7 +12,7 @@ from http.server import ThreadingHTTPServer
 from urllib import error, request
 
 # Fast bot turns for integration tests
-os.environ["HELIOS_BOT_DELAY"] = "0.05"
+os.environ["HOLOTABLE_BOT_DELAY"] = "0.05"
 
 from holotable.bots import (  # noqa: E402
     BOT_NAMES,
@@ -22,7 +22,7 @@ from holotable.bots import (  # noqa: E402
     sabacc_decide,
 )
 from holotable.live import LiveMatch  # noqa: E402
-from holotable.server import HeliosHandler, set_match, apply_computers  # noqa: E402
+from holotable.server import HolotableHandler, set_match, apply_computers  # noqa: E402
 
 
 class TestBotHelpers(unittest.TestCase):
@@ -102,7 +102,7 @@ class TestBotServerApi(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         set_match(LiveMatch(["Pilot", "Engineer"], rng=random.Random(99)), game_id="flip7", computers=0)
-        cls.httpd = ThreadingHTTPServer(("127.0.0.1", 0), HeliosHandler)
+        cls.httpd = ThreadingHTTPServer(("127.0.0.1", 0), HolotableHandler)
         cls.httpd.daemon_threads = True
         cls.port = cls.httpd.server_address[1]
         cls.thread = threading.Thread(target=cls.httpd.serve_forever, daemon=True)

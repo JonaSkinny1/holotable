@@ -1,19 +1,19 @@
 # Holotable
 
-The app is **Holotable**. **Flip 7** (played on the table as Reactor Overload), **Sabacc**, and **MANIFEST** are games on it. The Helios shell is the five-station public table. Private datapads drive the active game.
+The app is **Holotable**. **Flip 7**, **Sabacc**, and **MANIFEST** are games on it. The public table has five stations: Weather, Nav, Games, Bio, and Comms. Private datapads drive the active game.
 
 Software only in this repo — no physical Pepper’s Ghost hardware, actuators, or MQTT.
 
 **Sabacc disclaimer:** fan/home private-table house rules only. **Not a licensed Lucasfilm product.**
 
-## Helios vs Reactor
+## Holotable and its games
 
 | Layer | What it is |
 | --- | --- |
-| **Helios** | Ground-station shell on the public Holotable: **WEATHER · NAV · GAMES · BIO · COMMS** (keys `1`–`5`). Black / teal / hazard chrome for Pepper’s Ghost demos (**Ohio Outpost // Sol-3** / Ohio ground-station flavor). |
-| **Flip 7** | The Reactor Overload game on the Games tab: Flip 7 deck and scoring, Containment Lock / Overcharge Pulse / Neutralizer Shield labels, race to **200**. The game id stays `flip7`. |
-| **Sabacc** | Second REACTOR game: +/- cards, goal near **0**, bomb-out if \|sum\| > 23, race to **100**. Switch via the on-table game picker (or `POST /api/game`). |
-| **MANIFEST** | Third REACTOR game. Original. Sell one hand card, name it, buyer pays 2. Optional look for 1. Highest coins + market after 8 rounds, or when the table ends the game. |
+| **Holotable** | The app. Public table: **WEATHER · NAV · GAMES · BIO · COMMS** (keys `1`–`5`). Black / teal / hazard chrome for Pepper’s Ghost demos (**Ohio Outpost // Sol-3**). |
+| **Flip 7** | A game on the Games tab. Deck and scoring are Flip 7. Action cards show as Containment Lock, Overcharge Pulse, and Neutralizer Shield. Race to **200**. The game id stays `flip7`. |
+| **Sabacc** | A game on the same Games tab: +/- cards, goal near **0**, bomb-out if \|sum\| > 23, race to **100**. |
+| **MANIFEST** | A game on the same Games tab. Original. Sell one hand card, name it, buyer pays 2. Optional look for 1. Highest coins + market after 8 rounds, or when the table ends the game. |
 | **Other stations** | Polished **MOCK** stubs (solar/Kp, Earth/ISS orbit, vials SP-01–SP-08, frequency dial). Live APIs optional later. |
 
 ## Run — terminal Flip 7
@@ -23,7 +23,7 @@ python3 -m holotable
 python3 -m holotable --players 4
 ```
 
-## Run — Helios holotable server
+## Run — Holotable server
 
 ```bash
 python3 -m holotable.server
@@ -33,10 +33,10 @@ python3 -m holotable.server
 Then open:
 
 ```
-# public Helios table (stations 1–5; REACTOR = live game picker)
+# public Holotable (stations 1–5; Games = the one game menu)
 http://127.0.0.1:8766/
 http://127.0.0.1:8766/index.html#REACTOR
-http://127.0.0.1:8766/public.html          # redirects to #REACTOR
+http://127.0.0.1:8766/public.html          # redirects to the Games tab
 
 # private datapads (one tab/device per seat)
 http://127.0.0.1:8766/pad.html?seat=0
@@ -47,7 +47,7 @@ Sync: **WebSocket** `ws://127.0.0.1:8766/ws?role=table|pad&seat=N` with REST fal
 
 ### Solo with computer opponents
 
-1. Start the Helios server (optionally with bots at boot):
+1. Start the Holotable server (optionally with bots at boot):
    ```bash
    python3 -m holotable.server --host 0.0.0.0 --port 8766
    # or: python3 -m holotable.server --computers 2
@@ -60,7 +60,7 @@ REST: `POST /api/computers` with `{"computers":2}`. WebSocket: `{"type":"set_com
 
 ### Switch games
 
-- On the **Games** tab (or datapad): choose **Reactor Overload** (Flip 7), **Sabacc**, or **MANIFEST** from the one menu.
+- On the **Games** tab (or datapad): choose **Flip 7**, **Sabacc**, or **MANIFEST** from the one menu.
 - REST: `POST /api/game` with `{"game":"sabacc"}`, `{"game":"flip7"}`, or `{"game":"manifest"}`.
 - WebSocket: `{"type":"set_game","game":"manifest"}`.
 - Boot: `python3 -m holotable.server --game sabacc` or `--game manifest`.
@@ -96,16 +96,16 @@ Without `holotable.server`, pads cannot drive real draws — use the Holotable s
 python3 -m unittest discover -s tests -v
 ```
 
-## Rules — Flip 7 / Reactor Overload (summary)
+## Rules — Flip 7 (summary)
 
 - Deck: one `0`; card `N` appears `N` times for `N = 1..12`; three each of `SECOND_CHANCE`, `FREEZE`, `FLIP_THREE`.
 - Hit draws; duplicate nonzero number **busts** (0) unless Neutralizer Shield (`SECOND_CHANCE`) absorbs once.
 - Containment Lock (`FREEZE`) banks numeric score and ends the turn.
 - Overcharge Pulse (`FLIP_THREE`) forces three draws.
-- Seven unique numbers → `sum + 15` (**Reactor Overload** / Flip 7) and end the turn.
+- Seven unique numbers → `sum + 15` (**Flip 7**) and end the turn.
 - First to **200** wins.
 
-## Rules — Sabacc (Helios house / Spike-inspired)
+## Rules — Sabacc (Holotable house / Spike-inspired)
 
 Fan/home private table — **not** a Lucasfilm product.
 
@@ -120,7 +120,7 @@ Fan/home private table — **not** a Lucasfilm product.
 
 ## Holotable UX (UI pass)
 
-REACTOR table and datapad polish for kiosk / dark-room viewing (no engine changes):
+Games tab and datapad polish for kiosk / dark-room viewing:
 
 - **Table:** match HUD (game · turn · race target), clearer crew piles with **TURN** badge, higher teal/orange contrast.
 - **Pad:** large Hit/Stay targets, **Your turn** banner, help collapsed under details.
@@ -131,7 +131,7 @@ Details: `holotable/BRIDGE.md` (UX notes).
 ## Architecture
 
 - `holotable/` — the app package. Flip 7 lives in `deck`, `game`, `turn`, and `live` (the game is still Flip 7; its id is `flip7`). Sabacc (`sabacc`, `sabacc_live`), MANIFEST (`manifest`, `manifest_live`), computer opponents (`bots`), and `server` (`python -m holotable.server`).
-- `holotable/web/` — Helios static UI (`index.html`, `pad.html`, `css/`, `js/`).
+- `holotable/web/` — Holotable static UI (`index.html`, `pad.html`, `css/`, `js/`).
 - See `holotable/BRIDGE.md`.
 
 The GitHub repository is still named `flip-7`. It should be renamed to `holotable` after Jonathan confirms. This change does not rename the repository.
@@ -139,12 +139,12 @@ The GitHub repository is still named `flip-7`. It should be renamed to `holotabl
 ## Roadmap / out of scope here
 
 - [x] Terminal multiplayer rules engine
-- [x] Helios five-station shell + Reactor Overload live server
-- [x] Sabacc as second REACTOR game + game picker
-- [x] MANIFEST as a third REACTOR game on the same Holotable server
+- [x] Holotable five-station shell + Flip 7 on the Games tab
+- [x] Sabacc and MANIFEST on that same Games tab
+- [x] MANIFEST on the same Holotable server
 - [x] Computer opponents (solo / fill seats; server-driven)
 - [ ] Godot 4 table UI / Pepper’s Ghost layout (phase 2)
-- [ ] Physical Pepper’s Ghost, Helios station hardware, actuators, MQTT / Home Assistant
+- [ ] Physical Pepper’s Ghost, Holotable station hardware, actuators, MQTT / Home Assistant
 - [ ] Live WEATHER / NAV data feeds
 
 Owner: Jonathan Sarkkinen (`JonaSkinny1`)

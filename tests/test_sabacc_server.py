@@ -5,7 +5,7 @@ import unittest
 from urllib import error, request
 from http.server import ThreadingHTTPServer
 
-from holotable.server import HeliosHandler, set_match, switch_game, get_game_id
+from holotable.server import HolotableHandler, set_match, switch_game, get_game_id
 from holotable.live import LiveMatch
 from holotable.sabacc_live import SabaccLiveMatch
 
@@ -14,7 +14,7 @@ class TestSabaccServer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         set_match(LiveMatch(["Pilot", "Engineer"], rng=random.Random(99)), game_id="flip7")
-        cls.httpd = ThreadingHTTPServer(("127.0.0.1", 0), HeliosHandler)
+        cls.httpd = ThreadingHTTPServer(("127.0.0.1", 0), HolotableHandler)
         cls.httpd.daemon_threads = True
         cls.port = cls.httpd.server_address[1]
         cls.thread = threading.Thread(target=cls.httpd.serve_forever, daemon=True)
@@ -66,7 +66,7 @@ class TestSabaccServer(unittest.TestCase):
         code, state = self._post("/api/game", {"game": "flip7", "players": ["X", "Y"], "seed": 2})
         self.assertEqual(code, 200)
         self.assertEqual(state.get("rules"), "flip7")
-        self.assertEqual(state.get("title"), "Reactor Overload")
+        self.assertEqual(state.get("title"), "Flip 7")
 
     def test_index_has_picker(self):
         with request.urlopen(self.base + "/", timeout=3) as resp:

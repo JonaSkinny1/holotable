@@ -1,4 +1,4 @@
-"""Computer opponents for Helios REACTOR — Flip 7 and Sabacc heuristics.
+"""Computer opponents for the Holotable — Flip 7 and Sabacc heuristics.
 
 Bots are server-driven: no datapad required. Sci-fi / Ohio Outpost names only.
 """
@@ -75,7 +75,7 @@ def flip7_decide(
     shield: bool = False,
     turn_score: Optional[int] = None,
 ) -> str:
-    """Return 'hit' or 'stay' for Reactor Overload / Flip 7.
+    """Return 'hit' or 'stay' for Flip 7.
 
     Simple risk heuristic: chase Flip 7 when close; bank when bust risk rises.
     """
@@ -90,7 +90,7 @@ def flip7_decide(
 
         score = numeric_score(list(hand))
 
-    # Six unique numbers → go for Reactor Overload (+15)
+    # Six unique numbers → go for Flip 7 (+15)
     if n_u >= 6:
         return "hit"
     # Empty / very early hand — always draw

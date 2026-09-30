@@ -1,4 +1,4 @@
-"""Live MANIFEST match for the Holotable REACTOR station.
+"""Live MANIFEST match on the Holotable Games station.
 
 Same seats, WebSocket, and REST server as the other table games.
 Hands stay on the owning datapad. The public table shows markets, coins, and the named sale.

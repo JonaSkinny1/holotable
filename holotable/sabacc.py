@@ -1,4 +1,4 @@
-"""Simplified Corellian Spike–inspired Sabacc for Helios private tables.
+"""Simplified Corellian Spike–inspired Sabacc for the Holotable.
 
 Fan/home private table rules — NOT a licensed Lucasfilm product.
 See README for full house rules.
