@@ -15,26 +15,17 @@
 
     <div class="pad-turn waiting" id="pad-turn" aria-live="polite">Waiting…</div>
 
-    <div class="game-picker panel" id="game-picker" role="radiogroup" aria-label="Select game">
-      <h2>Game</h2>
-      <div class="picker-row">
-        <button type="button" class="pick active" data-game="flip7" id="pick-flip7"
-                role="radio" aria-checked="true">
-          Reactor Overload
-          <span class="pick-sub">Flip 7</span>
-        </button>
-        <button type="button" class="pick" data-game="sabacc" id="pick-sabacc"
-                role="radio" aria-checked="false">
-          Sabacc
-          <span class="pick-sub">Spike · 0</span>
-        </button>
-        <button type="button" class="pick" data-game="manifest" id="pick-manifest"
-                role="radio" aria-checked="false">
-          MANIFEST
-          <span class="pick-sub">Name it · sell</span>
-        </button>
-      </div>
+    <div class="panel games-tab">
+      <h2>Games</h2>
+      <label class="game-one" for="game-picker">All games</label>
+      <select id="game-picker" aria-label="Choose a game">
+        <option value="flip7" data-game="flip7">Reactor Overload</option>
+        <option value="sabacc" data-game="sabacc">Sabacc</option>
+        <option value="manifest" data-game="manifest">MANIFEST</option>
+      </select>
     </div>
+
+    <section class="score-card" id="score-card" aria-label="Scores"></section>
 
     <div class="bot-picker panel" id="bot-picker" role="group" aria-label="Computer opponents">
       <h2>Computers</h2>
@@ -143,11 +134,8 @@
 
       function syncPicker(rules) {
         lastRules = Holo.rulesId({ rules: rules });
-        document.querySelectorAll(".pick").forEach(function (btn) {
-          const on = btn.getAttribute("data-game") === lastRules;
-          btn.classList.toggle("active", on);
-          btn.setAttribute("aria-checked", on ? "true" : "false");
-        });
+        const sel = document.getElementById("game-picker");
+        if (sel && sel.value !== lastRules) sel.value = lastRules;
       }
 
       function goodButton(label, on, attrs) {
@@ -320,6 +308,7 @@
         document.getElementById("manifest-pad").hidden = !manifest;
         document.getElementById("flip-hand").hidden = manifest;
         document.getElementById("flip-actions").hidden = manifest;
+        Holo.renderScoreCard(document.getElementById("score-card"), s);
         if (manifest) {
           renderManifestPad(s);
           return;
@@ -457,13 +446,13 @@
           document.getElementById("pad-meta").textContent = String(e.message || e);
         });
       });
-      document.getElementById("game-picker").addEventListener("click", function (e) {
-        const btn = e.target.closest("button[data-game]");
-        if (!btn || !client) return;
-        const game = btn.getAttribute("data-game");
+      document.getElementById("game-picker").addEventListener("change", function (e) {
+        if (!client) return;
+        const game = e.target.value;
         if (game === lastRules) return;
         client.setGame(game, null, lastComputers).catch(function (err) {
           document.getElementById("pad-meta").textContent = String(err.message || err);
+          e.target.value = lastRules;
         });
       });
       document.getElementById("bot-picker").addEventListener("click", function (e) {

@@ -15,7 +15,7 @@
     <nav class="station-bar" aria-label="Stations">
       <button type="button" data-station="WEATHER" class="active"><span class="key">1</span>Weather</button>
       <button type="button" data-station="NAV"><span class="key">2</span>Nav</button>
-      <button type="button" data-station="REACTOR"><span class="key">3</span>Reactor</button>
+      <button type="button" data-station="REACTOR"><span class="key">3</span>Games</button>
       <button type="button" data-station="BIO"><span class="key">4</span>Bio</button>
       <button type="button" data-station="COMMS"><span class="key">5</span>Comms</button>
     </nav>
@@ -61,25 +61,14 @@
 
     <!-- REACTOR -->
     <section class="station-panel" id="station-REACTOR" data-station-panel="REACTOR">
-      <div class="game-picker panel" id="game-picker" role="radiogroup" aria-label="Select table game">
-        <h2>Table game · tap once to switch</h2>
-        <div class="picker-row">
-          <button type="button" class="pick active" data-game="flip7" id="pick-flip7"
-                  role="radio" aria-checked="true">
-            Reactor Overload
-            <span class="pick-sub">Flip 7 · race to 200</span>
-          </button>
-          <button type="button" class="pick" data-game="sabacc" id="pick-sabacc"
-                  role="radio" aria-checked="false">
-            Sabacc
-            <span class="pick-sub">Spike house · toward 0</span>
-          </button>
-          <button type="button" class="pick" data-game="manifest" id="pick-manifest"
-                  role="radio" aria-checked="false">
-            MANIFEST
-            <span class="pick-sub">Sell a good · name it · 8 rounds</span>
-          </button>
-        </div>
+      <div class="panel games-tab">
+        <h2>Games</h2>
+        <label class="game-one" for="game-picker">All games</label>
+        <select id="game-picker" aria-label="Choose a game">
+          <option value="flip7" data-game="flip7">Reactor Overload</option>
+          <option value="sabacc" data-game="sabacc">Sabacc</option>
+          <option value="manifest" data-game="manifest">MANIFEST</option>
+        </select>
         <p class="legend" id="game-disclaimer">
           Fan/home private table. Sabacc here is a simplified house game — not a licensed Lucasfilm product.
         </p>
@@ -104,6 +93,8 @@
         <div class="hud-turn" id="hud-turn">Standby</div>
         <div class="hud-target" id="hud-target">Race to 200</div>
       </div>
+
+      <section class="score-card" id="score-card" aria-label="Scores"></section>
 
       <div id="manifest-board" class="manifest-board" hidden>
         <div class="panel">
@@ -131,8 +122,7 @@
           <p class="legend" id="hand-sum-line" hidden>Hand sum: <strong id="hand-sum">0</strong></p>
         </div>
         <aside class="panel">
-          <h2 id="scores-heading">Crew scores</h2>
-          <ul class="scores" id="scores"></ul>
+          <h2 id="scores-heading">Rules</h2>
           <p class="legend" id="rules-legend">
             First to <strong>200</strong>.<br />
             Freeze → <strong>Containment Lock</strong><br />
@@ -266,11 +256,8 @@
 
       function syncPicker(rules) {
         lastRules = Holo.rulesId({ rules: rules });
-        document.querySelectorAll(".pick").forEach(function (btn) {
-          const on = btn.getAttribute("data-game") === lastRules;
-          btn.classList.toggle("active", on);
-          btn.setAttribute("aria-checked", on ? "true" : "false");
-        });
+        const sel = document.getElementById("game-picker");
+        if (sel && sel.value !== lastRules) sel.value = lastRules;
       }
 
       function esc(s) {
@@ -349,14 +336,9 @@
           head.appendChild(role);
           box.appendChild(head);
 
-          const score = document.createElement("p");
-          score.className = "manifest-score-line";
-          score.textContent = String(p.score);
-          box.appendChild(score);
-
           const breakdown = document.createElement("p");
           breakdown.className = "breakdown";
-          breakdown.textContent = p.coins + " coins + " + p.market_points + " market";
+          breakdown.textContent = p.coins + " coins · market " + p.market_points;
           box.appendChild(breakdown);
 
           const lines = document.createElement("p");
@@ -381,36 +363,7 @@
         });
 
         const finalEl = document.getElementById("manifest-final");
-        if (state.phase === "won") {
-          finalEl.hidden = false;
-          finalEl.innerHTML = "";
-          const h = document.createElement("h3");
-          h.textContent = "Final scores";
-          finalEl.appendChild(h);
-          const ol = document.createElement("ol");
-          (state.scores || []).forEach(function (row) {
-            const li = document.createElement("li");
-            const strong = document.createElement("strong");
-            strong.textContent = row.name + (row.role ? " · " + row.role : "");
-            li.appendChild(strong);
-            const pts = document.createElement("span");
-            pts.className = "pts";
-            pts.textContent = " " + row.score;
-            li.appendChild(pts);
-            const sub = document.createElement("div");
-            sub.className = "breakdown";
-            sub.textContent = row.coins + " coins + " + row.market_points + " market";
-            li.appendChild(sub);
-            ol.appendChild(li);
-          });
-          finalEl.appendChild(ol);
-          const legend = document.createElement("p");
-          legend.textContent = state.score_legend || "";
-          finalEl.appendChild(legend);
-        } else {
-          finalEl.hidden = true;
-          finalEl.innerHTML = "";
-        }
+        finalEl.hidden = true;
         document.getElementById("manifest-legend").textContent =
           state.score_legend || "Score = coins + market. One card 2, a pair 6, three of a kind 10.";
         document.getElementById("btn-end-table").hidden = state.phase === "won";
@@ -439,6 +392,7 @@
         const sabacc = rules === "sabacc";
         const manifest = rules === "manifest";
         syncPicker(rules);
+        Holo.renderScoreCard(document.getElementById("score-card"), state);
         document.getElementById("manifest-board").hidden = !manifest;
         document.getElementById("reactor-grid").hidden = manifest;
         if (state.computers !== undefined && state.computers !== null) {
@@ -477,9 +431,7 @@
           ? (state.hand_sum !== undefined ? (state.hand_sum > 0 ? "+" : "") + state.hand_sum : state.turn_score)
           : state.turn_score;
         document.getElementById("rules-legend").innerHTML = sabacc ? SABACC_LEGEND : FLIP7_LEGEND;
-        document.getElementById("scores-heading").textContent = sabacc
-          ? "Crew piles · to 100"
-          : "Crew piles · to 200";
+        document.getElementById("scores-heading").textContent = "Rules";
 
         const sumLine = document.getElementById("hand-sum-line");
         if (sabacc) {
@@ -500,23 +452,6 @@
         const core = document.getElementById("reactor-core");
         core.classList.toggle("bust", /bust|bomb/i.test(state.status || ""));
 
-        const ul = document.getElementById("scores");
-        ul.innerHTML = "";
-        (state.players || []).forEach(function (p) {
-          const li = document.createElement("li");
-          if (p.active) li.className = "active";
-          if (p.is_bot) li.classList.add("is-bot");
-          const badge = p.active ? '<span class="turn-badge">TURN</span>' : "";
-          const kind = p.is_bot
-            ? '<span class="bot-badge">CPU</span>'
-            : '<span class="human-badge">HUMAN</span>';
-          li.innerHTML =
-            '<span><span class="pile-label">SEAT ' + p.seat + "</span>" +
-            p.name + " " + kind + badge + "</span>" +
-            '<span class="pts">' + p.score + "</span>";
-          ul.appendChild(li);
-        });
-
         const hand = document.getElementById("public-hand");
         hand.innerHTML = "";
         (state.hand || []).forEach(function (c) {
@@ -534,13 +469,13 @@
         });
       }
 
-      document.getElementById("game-picker").addEventListener("click", function (e) {
-        const btn = e.target.closest("button[data-game]");
-        if (!btn || !client) return;
-        const game = btn.getAttribute("data-game");
+      document.getElementById("game-picker").addEventListener("change", function (e) {
+        if (!client) return;
+        const game = e.target.value;
         if (game === lastRules) return;
         client.setGame(game, null, lastComputers).catch(function (err) {
           document.getElementById("status").textContent = String(err.message || err);
+          e.target.value = lastRules;
         });
       });
 

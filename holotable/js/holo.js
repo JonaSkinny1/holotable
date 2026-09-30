@@ -261,6 +261,123 @@
     return card.name || card.id || "—";
   }
 
+  function uniqueNumbers(hand) {
+    const seen = {};
+    (hand || []).forEach(function (label) {
+      const s = String(label);
+      if (/^-?\d+$/.test(s) && Number(s) !== 0) seen[s] = true;
+    });
+    return Object.keys(seen).length;
+  }
+
+  /** Paper score card: number tiles, player totals, heart and star bonus tiles. */
+  function scoreModel(state) {
+    const rules = rulesId(state);
+    const players = (state && state.players) || [];
+    const tiles = [];
+    let heart = { icon: "♥", label: "Heart", on: false };
+    let star = { icon: "★", label: "Star", on: false };
+
+    if (rules === "manifest") {
+      const active = players.filter(function (p) { return p.seat === state.active_seat; })[0] || players[0];
+      ((active && active.market_lines) || []).forEach(function (line) {
+        tiles.push(String(line.points));
+      });
+      let pair = false;
+      let triple = false;
+      players.forEach(function (p) {
+        (p.market_lines || []).forEach(function (line) {
+          const n = Number(line.count) || 0;
+          if (n >= 3) triple = true;
+          if (n === 2 || n === 4 || n === 5) pair = true;
+        });
+      });
+      heart = { icon: "♥", label: "Pair", on: pair };
+      star = { icon: "★", label: "Three", on: triple };
+    } else if (rules === "sabacc") {
+      (state.hand || []).forEach(function (c) { tiles.push(cardShort(c)); });
+      const sum = Number(state.hand_sum || 0);
+      const limit = Number(state.bomb_limit || 23);
+      const dealt = (state.hand || []).length > 0;
+      heart = { icon: "♥", label: "Safe", on: dealt && Math.abs(sum) <= limit };
+      star = { icon: "★", label: "Pure", on: dealt && sum === 0 };
+    } else {
+      (state.hand || []).forEach(function (c) { tiles.push(cardShort(c)); });
+      heart = { icon: "♥", label: "Shield", on: !!(state && state.shield) };
+      const overload = uniqueNumbers(state && state.hand) >= 7 || /overload/i.test(String((state && state.status) || ""));
+      star = { icon: "★", label: "Overload", on: overload };
+    }
+    if (!tiles.length) tiles.push("—");
+
+    return {
+      title: state && state.phase === "won" ? "Final scores" : "Scores",
+      tiles: tiles,
+      totals: players.map(function (p) {
+        return {
+          label: "Player " + (Number(p.seat) + 1),
+          name: p.name || "",
+          score: p.score,
+          active: !!p.active,
+        };
+      }),
+      bonuses: [heart, star],
+    };
+  }
+
+  function renderScoreCard(root, state) {
+    if (!root) return;
+    const model = scoreModel(state || {});
+    root.innerHTML = "";
+
+    const title = document.createElement("h2");
+    title.className = "score-card-title";
+    title.textContent = model.title;
+    root.appendChild(title);
+
+    const strip = document.createElement("div");
+    strip.className = "score-tiles";
+    model.tiles.forEach(function (n) {
+      const tile = document.createElement("div");
+      tile.className = "score-tile";
+      tile.textContent = n;
+      strip.appendChild(tile);
+    });
+    root.appendChild(strip);
+
+    const list = document.createElement("ul");
+    list.className = "score-players";
+    model.totals.forEach(function (row) {
+      const li = document.createElement("li");
+      if (row.active) li.className = "active";
+      li.textContent = row.label + (row.name ? " · " + row.name : "") + " — " + row.score;
+      list.appendChild(li);
+    });
+    root.appendChild(list);
+
+    const bonusTitle = document.createElement("h2");
+    bonusTitle.className = "score-card-title";
+    bonusTitle.textContent = "Bonus";
+    root.appendChild(bonusTitle);
+
+    const bonus = document.createElement("div");
+    bonus.className = "bonus-row";
+    model.bonuses.forEach(function (b) {
+      const tile = document.createElement("div");
+      tile.className = "bonus-tile" + (b.on ? " on" : "");
+      tile.setAttribute("aria-label", b.label + (b.on ? ", on" : ", off"));
+      const icon = document.createElement("span");
+      icon.className = "bonus-icon";
+      icon.textContent = b.icon;
+      const cap = document.createElement("span");
+      cap.className = "bonus-label";
+      cap.textContent = b.label;
+      tile.appendChild(icon);
+      tile.appendChild(cap);
+      bonus.appendChild(tile);
+    });
+    root.appendChild(bonus);
+  }
+
   function cardPolarity(label) {
     const s = String(label || "");
     if (s === "Sylop" || s === "SYLOP" || s === "Ø" || s === "0") return "sylop";
@@ -305,6 +422,8 @@
     isManifest: isManifest,
     rulesId: rulesId,
     goodName: goodName,
+    scoreModel: scoreModel,
+    renderScoreCard: renderScoreCard,
     cardPolarity: cardPolarity,
     Stations: Stations,
   };

@@ -143,6 +143,9 @@ class TestManifestServer(unittest.TestCase):
             body = resp.read().decode()
         self.assertIn("MANIFEST", body)
         self.assertIn("data-game=\"manifest\"", body)
+        self.assertIn("score-card", body)
+        self.assertIn(">Games</button>", body)
+        self.assertNotIn("pick-manifest", body)
 
         with request.urlopen(self.base + "/pad.html", timeout=3) as resp:
             pad = resp.read().decode()
