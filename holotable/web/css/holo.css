@@ -1,6 +1,6 @@
-/* Helios Ohio Outpost // Sol-3 shell + Reactor Overload / Sabacc
+/* Holotable — Ohio Outpost // Sol-3
    Pepper’s Ghost friendly: black stage, teal / hazard chrome
-   Kiosk / monitor contrast pass — #0B0E14 · #00A896 · #F77F00 */
+   Home palette on every station: #000000 · #0B0E14 · #00C4AE · #FF8C1A */
 
 :root {
   --bg: #000000;
@@ -25,6 +25,9 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* Author `display` rules must not override the hidden attribute. */
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0;
   height: 100%;
@@ -34,7 +37,7 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 
-body.helios {
+body.holotable {
   display: flex;
   flex-direction: column;
   min-height: 100%;
@@ -43,7 +46,7 @@ body.helios {
 a { color: var(--teal-bright); }
 
 /* —— Top bar / stations —— */
-.helios-top {
+.holotable-top {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -55,13 +58,13 @@ a { color: var(--teal-bright); }
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6), inset 0 -1px 0 rgba(61, 255, 232, 0.15);
 }
 
-.helios-brand {
+.holotable-brand {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
 }
 
-.helios-brand .name {
+.holotable-brand .name {
   font-size: 1rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -70,7 +73,7 @@ a { color: var(--teal-bright); }
   font-weight: 600;
 }
 
-.helios-brand .sub {
+.holotable-brand .sub {
   font-family: var(--mono);
   font-size: 0.68rem;
   color: var(--muted);
@@ -256,7 +259,7 @@ a { color: var(--teal-bright); }
   .match-hud .hud-target { text-align: center; }
 }
 
-/* —— REACTOR —— */
+/* —— Games tab (station id REACTOR) —— */
 .reactor-grid {
   display: grid;
   grid-template-columns: 1fr minmax(200px, 260px);
@@ -434,7 +437,7 @@ a { color: var(--teal-bright); }
 
 .meter {
   height: 8px;
-  background: #151b24;
+  background: var(--panel-hi);
   border-radius: 4px;
   overflow: hidden;
   margin-top: 0.4rem;
@@ -763,90 +766,10 @@ a { color: var(--teal-bright); }
   text-align: center;
   font-family: var(--mono);
   font-size: 0.65rem;
-  color: #5a6574;
-}
-
-/* —— Game picker (Flip 7 / Sabacc) — hard to mis-tap —— */
-.game-picker {
-  margin-bottom: 0.35rem;
-}
-.game-picker h2 {
-  margin-bottom: 0.55rem;
-}
-.picker-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-.pick {
-  flex: 1 1 11rem;
-  min-height: 4.25rem;
-  font-family: var(--mono);
-  font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  text-align: left;
-  padding: 0.85rem 1rem;
-  border-radius: 6px;
-  border: 2px solid rgba(154, 168, 188, 0.4);
-  background: rgba(5, 7, 10, 0.95);
   color: var(--muted);
-  cursor: pointer;
-  line-height: 1.3;
-  transition: border-color 0.12s, background 0.12s, color 0.12s, box-shadow 0.12s;
-}
-.pick .pick-sub {
-  display: block;
-  margin-top: 0.35rem;
-  font-size: 0.7rem;
-  font-weight: 400;
-  color: #6a7585;
-  letter-spacing: 0.04em;
-  text-transform: none;
-}
-.pick:hover {
-  border-color: var(--teal);
-  color: var(--text);
-}
-.pick:focus-visible {
-  outline: 2px solid var(--teal-bright);
-  outline-offset: 3px;
-}
-.pick.active {
-  border-color: var(--teal-bright);
-  border-width: 3px;
-  background: var(--teal-dim);
-  color: var(--teal-bright);
-  box-shadow: var(--glow);
-  position: relative;
-}
-.pick.active::after {
-  content: "ACTIVE";
-  position: absolute;
-  top: 0.4rem;
-  right: 0.5rem;
-  font-size: 0.58rem;
-  letter-spacing: 0.12em;
-  color: var(--orange-bright);
-  font-weight: 700;
-}
-.pick.active .pick-sub {
-  color: rgba(61, 255, 232, 0.85);
 }
 
-/* Pad game picker slightly tighter but still large */
-.pad-shell .pick {
-  min-height: 3.75rem;
-  font-size: 0.88rem;
-  text-align: center;
-}
-.pad-shell .pick.active::after {
-  top: 0.3rem;
-  right: 0.35rem;
-}
-
-/* Sabacc polarity on mini / pad cards */
+/* Spike polarity on mini / pad cards — same teal, orange, and text as home */
 .mini-card.pos, .card.pos {
   border-color: var(--teal);
   color: var(--teal-bright);
@@ -856,15 +779,15 @@ a { color: var(--teal-bright); }
   color: var(--orange-bright);
   background: var(--orange-dim);
 }
-.mini-card.sylop, .card.sylop {
-  border-color: #d4dde8;
-  color: #e8eef5;
-  box-shadow: 0 0 12px rgba(200, 210, 230, 0.35);
+.mini-card.zero, .card.zero {
+  border-color: var(--text);
+  color: var(--text);
+  box-shadow: 0 0 12px rgba(242, 246, 251, 0.28);
 }
 
 .card.pos .rank { color: var(--teal-bright); }
 .card.neg .rank { color: var(--orange-bright); }
-.card.sylop .rank { color: #e8eef5; }
+.card.zero .rank { color: var(--text); }
 
 kbd {
   font-family: var(--mono);
@@ -945,4 +868,260 @@ kbd {
 .pad-shell .bot-n {
   flex: 1 1 3rem;
   min-height: 3rem;
+}
+
+/* —— One games menu + paper score card (home shell colors only) —— */
+.games-tab select {
+  display: block;
+  width: 100%;
+  min-height: var(--touch-min);
+  margin-top: 0.35rem;
+  padding: 0.55rem 0.75rem;
+  font-family: var(--mono);
+  font-size: 1rem;
+  color: var(--text);
+  background: var(--panel);
+  border: 2px solid var(--teal);
+  border-radius: 6px;
+}
+.game-one {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.score-card {
+  background: var(--panel);
+  border: 2px solid var(--teal);
+  border-radius: 16px;
+  padding: 0.9rem 1rem 1rem;
+  box-shadow: var(--glow);
+}
+.score-card-title {
+  margin: 0.85rem 0 0.45rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.2rem;
+}
+.score-card-title:first-child { margin-top: 0; }
+.score-tiles, .bonus-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+.score-tile, .bonus-tile {
+  width: 4.4rem;
+  height: 4.4rem;
+  border-radius: 12px;
+  border: 2px solid var(--teal);
+  background: var(--panel-hi);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-weight: 700;
+}
+.score-tile {
+  font-size: 1.55rem;
+  color: var(--teal-bright);
+}
+.score-players {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+.score-players li {
+  font-size: 1.2rem;
+  font-weight: 600;
+  padding: 0.35rem 0.15rem;
+  border-bottom: 1px solid rgba(154, 168, 188, 0.25);
+}
+.score-players li.active {
+  color: var(--teal-bright);
+}
+.bonus-tile {
+  color: var(--muted);
+  border-color: rgba(154, 168, 188, 0.45);
+}
+.bonus-tile.on {
+  color: var(--orange-bright);
+  border-color: var(--orange);
+  background: var(--orange-dim);
+}
+.bonus-icon { font-size: 1.45rem; line-height: 1; }
+.bonus-label {
+  margin-top: 0.2rem;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.pad-shell .score-tile,
+.pad-shell .bonus-tile {
+  width: 4rem;
+  height: 4rem;
+}
+.pad-shell .score-players li { font-size: 1.05rem; }
+
+/* —— MANIFEST —— */
+.manifest-board { margin-bottom: 0.75rem; }
+.manifest-offer {
+  margin: 0 0 0.85rem;
+  font-size: 1.05rem;
+  line-height: 1.4;
+  color: var(--text);
+}
+.manifest-seats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+.manifest-seat {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem;
+  background: rgba(5, 7, 10, 0.65);
+}
+.manifest-seat.active {
+  border-color: var(--teal-bright);
+  box-shadow: var(--glow);
+}
+.manifest-seat.leading {
+  border-color: var(--orange);
+}
+.manifest-seat header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+.manifest-seat .who {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.manifest-seat .role {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.manifest-score-line {
+  margin: 0.45rem 0 0.15rem;
+  font-family: var(--mono);
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: var(--teal-bright);
+}
+.manifest-seat .breakdown,
+.final-scores .breakdown,
+.lines {
+  margin: 0.15rem 0 0.45rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.mini-card.good {
+  min-width: 4.5rem;
+  font-size: 0.72rem;
+  line-height: 1.25;
+}
+.final-scores {
+  margin-top: 0.9rem;
+  padding: 0.85rem;
+  border: 2px solid var(--orange);
+  border-radius: 6px;
+  background: var(--orange-dim);
+}
+.final-scores h3 {
+  margin: 0 0 0.5rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  color: var(--orange-bright);
+}
+.final-scores ol {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+.final-scores li {
+  margin: 0.35rem 0;
+  font-size: 1.05rem;
+}
+.final-scores .pts {
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--orange-bright);
+}
+.end-game {
+  margin-top: 0.85rem;
+  min-height: 3rem;
+  padding: 0.6rem 1rem;
+  font-family: var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  border: 2px solid var(--orange);
+  background: transparent;
+  color: var(--orange-bright);
+  cursor: pointer;
+}
+.end-game:hover { background: var(--orange-dim); }
+
+.role-row, .claim-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.role-note { margin: 0.35rem 0 0.5rem; }
+.role-btn, .good-card {
+  font-family: var(--mono);
+  border-radius: 6px;
+  border: 2px solid var(--border);
+  background: #05070a;
+  color: var(--text);
+  cursor: pointer;
+}
+.role-btn {
+  min-height: 2.6rem;
+  padding: 0.4rem 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.75rem;
+}
+.good-card {
+  min-width: 6.4rem;
+  min-height: 4.25rem;
+  padding: 0.55rem 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+}
+.good-card.static { cursor: default; }
+.good-card.is-on, .role-btn.is-on {
+  border-color: var(--orange-bright);
+  color: var(--orange-bright);
+  background: var(--orange-dim);
+  box-shadow: var(--glow-orange);
+}
+.good-card:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.pad-shell .manifest-score-line {
+  font-size: 1.15rem;
+  text-align: center;
+}
+#manifest-actions {
+  margin-top: 0.75rem;
+}
+#manifest-actions #btn-accept {
+  grid-column: 1 / -1;
 }

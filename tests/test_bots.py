@@ -12,17 +12,17 @@ from http.server import ThreadingHTTPServer
 from urllib import error, request
 
 # Fast bot turns for integration tests
-os.environ["HELIOS_BOT_DELAY"] = "0.05"
+os.environ["HOLOTABLE_BOT_DELAY"] = "0.05"
 
-from flip7.bots import (  # noqa: E402
+from holotable.bots import (  # noqa: E402
     BOT_NAMES,
     build_roster,
     decide_from_snapshot,
     flip7_decide,
-    sabacc_decide,
+    spike_decide,
 )
-from flip7.live import LiveMatch  # noqa: E402
-from flip7.server import HeliosHandler, set_match, apply_computers  # noqa: E402
+from holotable.live import LiveMatch  # noqa: E402
+from holotable.server import HolotableHandler, set_match, apply_computers  # noqa: E402
 
 
 class TestBotHelpers(unittest.TestCase):
@@ -39,8 +39,8 @@ class TestBotHelpers(unittest.TestCase):
         self.assertEqual(len(names), 2)
         self.assertEqual(seats, set())
 
-    def test_sabacc_cap(self):
-        names, seats = build_roster(computers=3, game="sabacc")
+    def test_spike_cap(self):
+        names, seats = build_roster(computers=3, game="spike")
         self.assertEqual(len(names), 4)  # 1 human + 3 bots
         self.assertEqual(len(seats), 3)
 
@@ -53,11 +53,11 @@ class TestBotHelpers(unittest.TestCase):
         hand = [10, 12, 8]
         self.assertEqual(flip7_decide(hand, shield=False, turn_score=40), "stay")
 
-    def test_sabacc_decide_near_zero(self):
-        self.assertEqual(sabacc_decide(0), "stay")
-        self.assertEqual(sabacc_decide(2), "stay")
-        self.assertEqual(sabacc_decide(-15), "hit")
-        self.assertEqual(sabacc_decide(20), "stay")
+    def test_spike_decide_near_zero(self):
+        self.assertEqual(spike_decide(0), "stay")
+        self.assertEqual(spike_decide(2), "stay")
+        self.assertEqual(spike_decide(-15), "hit")
+        self.assertEqual(spike_decide(20), "stay")
 
     def test_decide_from_snapshot_bot(self):
         state = {
@@ -102,7 +102,7 @@ class TestBotServerApi(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         set_match(LiveMatch(["Pilot", "Engineer"], rng=random.Random(99)), game_id="flip7", computers=0)
-        cls.httpd = ThreadingHTTPServer(("127.0.0.1", 0), HeliosHandler)
+        cls.httpd = ThreadingHTTPServer(("127.0.0.1", 0), HolotableHandler)
         cls.httpd.daemon_threads = True
         cls.port = cls.httpd.server_address[1]
         cls.thread = threading.Thread(target=cls.httpd.serve_forever, daemon=True)

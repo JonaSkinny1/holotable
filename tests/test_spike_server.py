@@ -5,16 +5,16 @@ import unittest
 from urllib import error, request
 from http.server import ThreadingHTTPServer
 
-from flip7.server import HeliosHandler, set_match, switch_game, get_game_id
-from flip7.live import LiveMatch
-from flip7.sabacc_live import SabaccLiveMatch
+from holotable.server import HolotableHandler, set_match, switch_game, get_game_id
+from holotable.live import LiveMatch
+from holotable.spike_live import SpikeLiveMatch
 
 
-class TestSabaccServer(unittest.TestCase):
+class TestSpikeServer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         set_match(LiveMatch(["Pilot", "Engineer"], rng=random.Random(99)), game_id="flip7")
-        cls.httpd = ThreadingHTTPServer(("127.0.0.1", 0), HeliosHandler)
+        cls.httpd = ThreadingHTTPServer(("127.0.0.1", 0), HolotableHandler)
         cls.httpd.daemon_threads = True
         cls.port = cls.httpd.server_address[1]
         cls.thread = threading.Thread(target=cls.httpd.serve_forever, daemon=True)
@@ -44,35 +44,35 @@ class TestSabaccServer(unittest.TestCase):
         except error.HTTPError as e:
             return e.code, json.loads(e.read().decode())
 
-    def test_switch_to_sabacc(self):
-        code, state = self._post("/api/game", {"game": "sabacc", "players": ["A", "B"], "seed": 3})
+    def test_switch_to_spike(self):
+        code, state = self._post("/api/game", {"game": "spike", "players": ["A", "B"], "seed": 3})
         self.assertEqual(code, 200)
-        self.assertEqual(state.get("rules"), "sabacc")
-        self.assertEqual(state.get("title"), "Sabacc")
+        self.assertEqual(state.get("rules"), "spike")
+        self.assertEqual(state.get("title"), "Spike")
         self.assertIn("hand_sum", state)
-        self.assertEqual(get_game_id(), "sabacc")
+        self.assertEqual(get_game_id(), "spike")
 
         code, health = self._get("/api/health")
-        self.assertEqual(health.get("active_game"), "sabacc")
+        self.assertEqual(health.get("active_game"), "spike")
         self.assertEqual(health.get("outpost"), "Ohio Outpost // Sol-3")
 
         code, games = self._get("/api/games")
-        self.assertEqual(games.get("active"), "sabacc")
+        self.assertEqual(games.get("active"), "spike")
         ids = [g["id"] for g in games["games"]]
         self.assertIn("flip7", ids)
-        self.assertIn("sabacc", ids)
+        self.assertIn("spike", ids)
 
     def test_switch_back_flip7(self):
         code, state = self._post("/api/game", {"game": "flip7", "players": ["X", "Y"], "seed": 2})
         self.assertEqual(code, 200)
         self.assertEqual(state.get("rules"), "flip7")
-        self.assertEqual(state.get("title"), "Reactor Overload")
+        self.assertEqual(state.get("title"), "Flip 7")
 
     def test_index_has_picker(self):
         with request.urlopen(self.base + "/", timeout=3) as resp:
             body = resp.read().decode()
             self.assertIn("game-picker", body)
-            self.assertIn("Sabacc", body)
+            self.assertIn("Spike", body)
             self.assertNotIn("Youngstown", body)
             self.assertIn("Ohio Outpost", body)
 

@@ -1,4 +1,4 @@
-"""Live multiplayer match + Reactor Overload reskin labels for Helios."""
+"""Live Flip 7 match for the Holotable, with table labels on the action cards."""
 
 from __future__ import annotations
 
@@ -31,13 +31,12 @@ def display_log_line(line: str) -> str:
     out = line
     for raw, pretty in RESKIN.items():
         out = out.replace(raw, pretty)
-    out = out.replace("Flip 7!", "Reactor Overload!")
     out = out.replace("Shield armed", "Neutralizer Shield armed")
     return out
 
 
 class LiveMatch:
-    """Thread-safe Flip 7 match for the Helios REACTOR station."""
+    """Thread-safe Flip 7 match on the Holotable."""
 
     def __init__(
         self,
@@ -53,7 +52,7 @@ class LiveMatch:
         self.turn: Optional[TurnController] = None
         self.phase = "lobby"  # lobby | choosing | resolving | between | won
         self.winner: Optional[Player] = None
-        self.status = "Helios REACTOR online — start match"
+        self.status = "Holotable online — Flip 7 ready"
         self.match_id = 1
         self._begin_turn_unlocked()
 
@@ -91,7 +90,7 @@ class LiveMatch:
             self.turn = None
             self.winner = None
             self.match_id += 1
-            self.status = "New reactor cycle"
+            self.status = "New Flip 7 deal"
             self._begin_turn_unlocked()
             snap = self.snapshot()
         self._notify()
@@ -153,7 +152,7 @@ class LiveMatch:
             if result.busted
             else "Containment Lock"
             if result.froze
-            else "Reactor Overload"
+            else "Flip 7"
             if result.flip7
             else "banked"
         )
@@ -163,7 +162,7 @@ class LiveMatch:
         if winner:
             self.winner = winner
             self.phase = "won"
-            self.status = f"{winner.name} wins with {winner.score} — Reactor Overload complete"
+            self.status = f"{winner.name} wins with {winner.score} — Flip 7 complete"
             return
         self.phase = "between"
 
@@ -188,7 +187,7 @@ class LiveMatch:
             computers = len(self.bot_seats)
             return {
                 "station": "REACTOR",
-                "title": "Reactor Overload",
+                "title": "Flip 7",
                 "rules": "flip7",
                 "game": "flip7",
                 "match_id": self.match_id,

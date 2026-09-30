@@ -1,8 +1,8 @@
 import random
 import unittest
 
-from flip7.game import Flip7Game
-from flip7.turn import TurnController
+from holotable.game import Flip7Game
+from holotable.turn import TurnController
 
 
 class TestTurnController(unittest.TestCase):
@@ -45,7 +45,7 @@ class TestTurnController(unittest.TestCase):
 
 class TestLiveMatch(unittest.TestCase):
     def test_two_player_hit_stay_cycle(self):
-        from flip7.live import LiveMatch
+        from holotable.live import LiveMatch
 
         m = LiveMatch(["Pilot", "Engineer"], rng=random.Random(7))
         snap = m.snapshot()
@@ -58,7 +58,7 @@ class TestLiveMatch(unittest.TestCase):
             self.assertGreaterEqual(snap2["players"][seat]["score"], before)
 
     def test_wrong_seat_rejected(self):
-        from flip7.live import LiveMatch
+        from holotable.live import LiveMatch
 
         m = LiveMatch(["A", "B"], rng=random.Random(3))
         snap = m.snapshot()

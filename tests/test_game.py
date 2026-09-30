@@ -1,7 +1,7 @@
 import random
 import unittest
 
-from flip7.game import Flip7Game, TurnResult
+from holotable.game import Flip7Game, TurnResult
 
 
 class TestGame(unittest.TestCase):

@@ -3,8 +3,8 @@ import threading
 import unittest
 from urllib import error, request
 
-from flip7.server import HeliosHandler, set_match
-from flip7.live import LiveMatch
+from holotable.server import HolotableHandler, set_match
+from holotable.live import LiveMatch
 from http.server import ThreadingHTTPServer
 import random
 
@@ -13,7 +13,7 @@ class TestServerSmoke(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         set_match(LiveMatch(["Pilot", "Engineer"], rng=random.Random(99)))
-        cls.httpd = ThreadingHTTPServer(("127.0.0.1", 0), HeliosHandler)
+        cls.httpd = ThreadingHTTPServer(("127.0.0.1", 0), HolotableHandler)
         cls.httpd.daemon_threads = True
         cls.port = cls.httpd.server_address[1]
         cls.thread = threading.Thread(target=cls.httpd.serve_forever, daemon=True)
@@ -49,15 +49,16 @@ class TestServerSmoke(unittest.TestCase):
         self.assertTrue(health.get("ok"))
         code, state = self._get("/api/state")
         self.assertEqual(code, 200)
-        self.assertEqual(state.get("title"), "Reactor Overload")
+        self.assertEqual(state.get("title"), "Flip 7")
         self.assertIn("players", state)
 
     def test_static_index(self):
         with request.urlopen(self.base + "/", timeout=3) as resp:
             self.assertEqual(resp.status, 200)
             body = resp.read().decode()
-            self.assertIn("Helios", body)
-            self.assertIn("REACTOR", body)
+            self.assertIn("Holotable", body)
+            self.assertIn(">Games</button>", body)
+            self.assertIn("Flip 7", body)
 
     def test_new_match_post(self):
         code, state = self._post("/api/new", {"players": ["A", "B"], "seed": 1})

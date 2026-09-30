@@ -1,50 +1,50 @@
 import random
 import unittest
 
-from flip7.sabacc import (
-    SabaccGame,
-    SabaccTurnController,
-    create_sabacc_deck,
+from holotable.spike import (
+    SpikeGame,
+    SpikeTurnController,
+    create_spike_deck,
     hand_total,
     is_bomb,
     stand_points,
     card_value,
 )
-from flip7.sabacc_live import SabaccLiveMatch
+from holotable.spike_live import SpikeLiveMatch
 
 
-class TestSabaccDeck(unittest.TestCase):
+class TestSpikeDeck(unittest.TestCase):
     def test_composition(self):
-        deck = create_sabacc_deck()
+        deck = create_spike_deck()
         self.assertEqual(len(deck), 42)
-        self.assertEqual(deck.count("SYLOP"), 2)
+        self.assertEqual(deck.count("NULL"), 2)
         for n in range(1, 11):
             self.assertEqual(deck.count(n), 2)
             self.assertEqual(deck.count(-n), 2)
 
     def test_values_and_scoring(self):
-        self.assertEqual(card_value("SYLOP"), 0)
+        self.assertEqual(card_value("NULL"), 0)
         self.assertEqual(card_value(-7), -7)
-        self.assertEqual(hand_total([5, -3, "SYLOP"]), 2)
+        self.assertEqual(hand_total([5, -3, "NULL"]), 2)
         self.assertFalse(is_bomb([10, 10, 3]))
         self.assertTrue(is_bomb([10, 10, 4]))
-        self.assertEqual(stand_points(["SYLOP"]), 24)
+        self.assertEqual(stand_points(["NULL"]), 24)
         self.assertEqual(stand_points([5, -3]), 22)
 
 
-class TestSabaccGame(unittest.TestCase):
+class TestSpikeGame(unittest.TestCase):
     def test_player_bounds(self):
         with self.assertRaises(ValueError):
-            SabaccGame(["Only"])
+            SpikeGame(["Only"])
         with self.assertRaises(ValueError):
-            SabaccGame([f"P{i}" for i in range(5)])
+            SpikeGame([f"P{i}" for i in range(5)])
 
     def test_target(self):
-        self.assertEqual(SabaccGame.TARGET, 100)
+        self.assertEqual(SpikeGame.TARGET, 100)
 
     def test_turn_deal_and_stay(self):
-        g = SabaccGame(["A", "B"], rng=random.Random(7))
-        tc = SabaccTurnController(game=g)
+        g = SpikeGame(["A", "B"], rng=random.Random(7))
+        tc = SpikeTurnController(game=g)
         early = tc.start()
         self.assertIsNone(early)
         self.assertEqual(len(tc.hand), 2)
@@ -53,9 +53,9 @@ class TestSabaccGame(unittest.TestCase):
         self.assertEqual(result.points, stand_points(result.hand))
 
     def test_bomb_on_hit(self):
-        g = SabaccGame(["A", "B"], rng=random.Random(0))
+        g = SpikeGame(["A", "B"], rng=random.Random(0))
         # Force a hand that bombs on next draw
-        tc = SabaccTurnController(game=g)
+        tc = SpikeTurnController(game=g)
         tc.started = True
         tc.hand = [10, 10, 3]
         # Put a +1 on top of deck
@@ -66,13 +66,13 @@ class TestSabaccGame(unittest.TestCase):
         self.assertEqual(result.points, 0)
 
 
-class TestSabaccLiveMatch(unittest.TestCase):
+class TestSpikeLiveMatch(unittest.TestCase):
     def test_hit_stay_cycle(self):
-        m = SabaccLiveMatch(["Pilot", "Engineer"], rng=random.Random(42))
+        m = SpikeLiveMatch(["Pilot", "Engineer"], rng=random.Random(42))
         snap = m.snapshot()
-        self.assertEqual(snap["rules"], "sabacc")
-        self.assertEqual(snap["game"], "sabacc")
-        self.assertEqual(snap["title"], "Sabacc")
+        self.assertEqual(snap["rules"], "spike")
+        self.assertEqual(snap["game"], "spike")
+        self.assertEqual(snap["title"], "Spike")
         seat = snap["active_seat"]
         # Stay immediately after opening deal
         snap = m.stay(seat)
@@ -80,7 +80,7 @@ class TestSabaccLiveMatch(unittest.TestCase):
         self.assertEqual(len(snap["players"]), 2)
 
     def test_wrong_seat(self):
-        m = SabaccLiveMatch(["A", "B"], rng=random.Random(1))
+        m = SpikeLiveMatch(["A", "B"], rng=random.Random(1))
         bad = 1 - m.game.current
         with self.assertRaises(RuntimeError):
             m.hit(bad)

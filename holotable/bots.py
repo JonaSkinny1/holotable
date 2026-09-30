@@ -1,4 +1,4 @@
-"""Computer opponents for Helios REACTOR — Flip 7 and Sabacc heuristics.
+"""Computer opponents for the Holotable — Flip 7 and Spike heuristics.
 
 Bots are server-driven: no datapad required. Sci-fi / Ohio Outpost names only.
 """
@@ -16,7 +16,7 @@ HUMAN_FILL = ("Engineer", "Gunner", "Science")
 
 def max_players_for_game(game: str) -> int:
     g = (game or "flip7").strip().lower()
-    if g in ("sabacc", "spike", "corellian"):
+    if g in ("spike", "manifest"):
         return 4
     return 6
 
@@ -75,7 +75,7 @@ def flip7_decide(
     shield: bool = False,
     turn_score: Optional[int] = None,
 ) -> str:
-    """Return 'hit' or 'stay' for Reactor Overload / Flip 7.
+    """Return 'hit' or 'stay' for Flip 7.
 
     Simple risk heuristic: chase Flip 7 when close; bank when bust risk rises.
     """
@@ -90,7 +90,7 @@ def flip7_decide(
 
         score = numeric_score(list(hand))
 
-    # Six unique numbers → go for Reactor Overload (+15)
+    # Six unique numbers → go for Flip 7 (+15)
     if n_u >= 6:
         return "hit"
     # Empty / very early hand — always draw
@@ -120,8 +120,8 @@ def flip7_decide(
     return "hit"
 
 
-def sabacc_decide(hand_sum: int, bomb_limit: int = 23) -> str:
-    """Return 'hit' or 'stay' for Sabacc (toward 0, bomb if |sum| > limit)."""
+def spike_decide(hand_sum: int, bomb_limit: int = 23) -> str:
+    """Return 'hit' or 'stay' for Spike (toward 0, bomb if |sum| > limit)."""
     abs_sum = abs(int(hand_sum))
     # Pure / near-zero — stand
     if abs_sum <= 3:
@@ -129,7 +129,7 @@ def sabacc_decide(hand_sum: int, bomb_limit: int = 23) -> str:
     # Near bomb-out — do not draw
     if abs_sum >= bomb_limit - 4:
         return "stay"
-    # Far from zero — draw to chase Spike
+    # Far from zero — draw toward zero
     if abs_sum >= 8:
         return "hit"
     # Mild distance — slight preference to stand
@@ -153,8 +153,8 @@ def decide_from_snapshot(state: dict) -> Optional[str]:
         return None
 
     rules = state.get("rules") or state.get("game") or "flip7"
-    if rules == "sabacc":
-        return sabacc_decide(
+    if rules == "spike":
+        return spike_decide(
             int(state.get("hand_sum") or 0),
             int(state.get("bomb_limit") or 23),
         )

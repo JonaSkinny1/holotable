@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Holotable Datapad</title>
+  <link rel="stylesheet" href="css/holo.css" />
+</head>
+<body>
+  <div class="pad-shell">
+    <header class="holo-header">
+      <h1>Datapad</h1>
+      <span class="tag" id="player-tag">PRIVATE</span>
+    </header>
+
+    <div class="pad-turn waiting" id="pad-turn" aria-live="polite">Waiting…</div>
+
+    <div class="panel games-tab">
+      <h2>Games</h2>
+      <label class="game-one" for="game-picker">All games</label>
+      <select id="game-picker" aria-label="Choose a game">
+        <option value="flip7" data-game="flip7">Flip 7</option>
+        <option value="spike" data-game="spike">Spike</option>
+        <option value="manifest" data-game="manifest">MANIFEST</option>
+      </select>
+    </div>
+
+    <section class="score-card" id="score-card" aria-label="Scores"></section>
+
+    <div class="bot-picker panel" id="bot-picker" role="group" aria-label="Computer opponents">
+      <h2>Computers</h2>
+      <div class="bot-row" id="bot-row">
+        <button type="button" class="bot-n active" data-computers="0" aria-pressed="true">0</button>
+        <button type="button" class="bot-n" data-computers="1" aria-pressed="false">1</button>
+        <button type="button" class="bot-n" data-computers="2" aria-pressed="false">2</button>
+        <button type="button" class="bot-n" data-computers="3" aria-pressed="false">3</button>
+      </div>
+      <p class="legend" style="margin:0.4rem 0 0">Solo: pick 1–3. Bots need no pad.</p>
+    </div>
+
+    <section class="panel" id="flip-hand" aria-label="Hand">
+      <h2 id="hand-heading">Your hand</h2>
+      <div class="hand" id="hand"></div>
+      <p class="pad-sum-line" id="pad-sum" hidden></p>
+    </section>
+
+    <section class="panel" id="manifest-pad" hidden aria-label="MANIFEST">
+      <h2>Your side</h2>
+      <div class="role-row" id="role-row" role="group" aria-label="Pick a side"></div>
+      <p class="legend role-note">You pick. Nobody assigns a side.</p>
+      <p class="manifest-score-line" id="manifest-you"></p>
+      <h2>Your market</h2>
+      <div class="hand" id="manifest-market"></div>
+      <div id="manifest-sell-block">
+        <h2>Hand</h2>
+        <div class="hand" id="manifest-hand"></div>
+        <div id="manifest-offer-controls">
+          <h2>Name it</h2>
+          <div class="claim-row" id="manifest-claims"></div>
+          <h2>Buyer · pays 2</h2>
+          <div class="claim-row" id="manifest-buyers"></div>
+        </div>
+      </div>
+      <p class="pad-sum-line" id="manifest-offer-note"></p>
+      <div class="actions" id="manifest-actions">
+        <button type="button" id="btn-sell">Sell · they pay 2</button>
+        <button type="button" id="btn-look">Look · pay 1</button>
+        <button type="button" id="btn-accept">Don't look</button>
+        <button type="button" class="hazard" id="btn-end-manifest">End game</button>
+        <button type="button" class="hazard" id="btn-new-manifest">New match</button>
+      </div>
+    </section>
+
+    <div class="actions" id="flip-actions">
+      <button type="button" id="btn-hit">Hit · Draw</button>
+      <button type="button" id="btn-stay">Stay · Bank</button>
+      <button type="button" class="hazard" id="btn-new">New match</button>
+    </div>
+
+    <p class="pad-meta" id="pad-meta">Connecting…</p>
+    <p class="conn" id="conn" style="text-align:center;margin-top:0.45rem">…</p>
+
+    <div class="todo">
+      <details>
+        <summary>Help · seat &amp; table</summary>
+        <p id="pad-todo">
+          MANIFEST: sell one hand card, name it, buyer pays 2. Look costs 1.
+          No look or a match stands as named. A miss fails and you pay 3, or whatever you have.
+          Public table:
+          <a href="index.html#REACTOR">Holotable Games</a>.
+          Seat via <code>?seat=0</code>, <code>?seat=1</code>, …
+        </p>
+      </details>
+    </div>
+  </div>
+  <script src="js/holo.js"></script>
+  <script>
+    (function () {
+      const params = new URLSearchParams(location.search);
+      const seat = Number(params.get("seat") || "0");
+      document.getElementById("player-tag").textContent = "PRIVATE · SEAT " + seat;
+
+      let state = null;
+      let client = null;
+      let lastRules = "flip7";
+      let lastComputers = 0;
+      let pick = { match: null, phase: null, card: null, claim: null, buyer: null };
+
+      function cardEl(label, spike) {
+        const div = document.createElement("div");
+        const action = Holo.isActionLabel(label);
+        let cls = "card";
+        if (spike) {
+          const pol = Holo.cardPolarity(label);
+          if (pol) cls += " " + pol;
+        } else if (action) {
+          cls += " action";
+        }
+        div.className = cls;
+        const short = Holo.cardShort(label);
+        if (!spike && action) {
+          div.innerHTML =
+            '<span class="rank">' + short + "</span>" +
+            '<span class="sub">' + String(label).split(" ")[0] + "</span>";
+        } else if (spike) {
+          div.innerHTML =
+            '<span class="rank">' + short + '</span><span class="sub">spike</span>';
+        } else {
+          div.innerHTML =
+            '<span class="rank">' + short + '</span><span class="sub">flux</span>';
+        }
+        return div;
+      }
+
+      function syncPicker(rules) {
+        lastRules = Holo.rulesId({ rules: rules });
+        const sel = document.getElementById("game-picker");
+        if (sel && sel.value !== lastRules) sel.value = lastRules;
+      }
+
+      function goodButton(label, on, attrs) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "good-card" + (on ? " is-on" : "");
+        btn.textContent = label;
+        if (attrs) {
+          Object.keys(attrs).forEach(function (k) { btn.setAttribute(k, attrs[k]); });
+        }
+        return btn;
+      }
+
+      function renderManifestPad(s) {
+        const me = (s.players || []).find(function (p) { return p.seat === seat; });
+        const selling = s.phase === "selling" && s.actor_seat === seat;
+        const buying = s.phase === "looking" && s.offer && s.offer.buyer_seat === seat;
+        if (pick.match !== s.match_id || pick.phase !== s.phase) {
+          pick = { match: s.match_id, phase: s.phase, card: null, claim: null, buyer: null };
+        }
+
+        document.getElementById("flip-hand").hidden = true;
+        document.getElementById("flip-actions").hidden = true;
+        document.getElementById("manifest-pad").hidden = false;
+        document.getElementById("manifest-offer-controls").hidden = !selling;
+
+        const roles = document.getElementById("role-row");
+        roles.innerHTML = "";
+        (s.roles || []).forEach(function (role) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "role-btn" + (me && me.role === role.id ? " is-on" : "");
+          btn.textContent = role.name;
+          btn.setAttribute("data-role", role.id);
+          roles.appendChild(btn);
+        });
+
+        const you = document.getElementById("manifest-you");
+        if (me) {
+          const lines = (me.market_lines || []).map(function (line) {
+            return line.name + " ×" + line.count + " — " + line.points;
+          }).join(" · ");
+          you.textContent =
+            me.score + " = " + me.coins + " coins + " + me.market_points + " market" +
+            (lines ? " · " + lines : "");
+        } else {
+          you.textContent = "This seat is not at the table.";
+        }
+
+        const market = document.getElementById("manifest-market");
+        market.innerHTML = "";
+        ((me && me.market) || []).forEach(function (c) {
+          const el = document.createElement("div");
+          el.className = "good-card static";
+          el.setAttribute("data-good", c.id || "");
+          el.textContent = Holo.goodName(c);
+          market.appendChild(el);
+        });
+
+        const hand = document.getElementById("manifest-hand");
+        hand.innerHTML = "";
+        const mine = s.your_hand || [];
+        if (pick.card && !mine.some(function (c) { return c.uid === pick.card; })) {
+          pick.card = null;
+        }
+        mine.forEach(function (c) {
+          const btn = goodButton(Holo.goodName(c), pick.card === c.uid, {
+            "data-card": c.uid,
+            "data-good": c.id,
+          });
+          hand.appendChild(btn);
+        });
+
+        const claims = document.getElementById("manifest-claims");
+        claims.innerHTML = "";
+        (s.goods || []).forEach(function (g) {
+          claims.appendChild(goodButton(g.name, pick.claim === g.id, {
+            "data-claim": g.id,
+            "data-good": g.id,
+          }));
+        });
+
+        const buyers = document.getElementById("manifest-buyers");
+        buyers.innerHTML = "";
+        (s.players || []).forEach(function (p) {
+          if (p.seat === seat) return;
+          const broke = (p.coins || 0) < 2;
+          const btn = goodButton(
+            p.name + " · " + p.coins,
+            pick.buyer === p.seat,
+            { "data-buyer": String(p.seat) }
+          );
+          btn.disabled = broke || !selling;
+          if (broke) btn.title = "Needs 2 coins";
+          buyers.appendChild(btn);
+        });
+
+        const note = document.getElementById("manifest-offer-note");
+        if (s.phase === "won") {
+          const rows = (s.scores || []).map(function (row) {
+            return row.name + " " + row.score + " (" + row.coins + " coins + " + row.market_points + " market)";
+          });
+          note.textContent = (s.status || "Final scores") + (rows.length ? " · " + rows.join(" · ") : "");
+        } else if (buying && s.offer) {
+          note.textContent =
+            s.offer.seller_name + " says this is " + s.offer.claim.name +
+            ". You paid 2. Look for 1, or let the sale stand as named.";
+        } else if (s.phase === "looking" && s.offer_truth) {
+          note.textContent =
+            "You named " + s.offer.claim.name + ". The card is " + s.offer_truth.name +
+            ". Waiting for the buyer.";
+        } else if (s.last_sale && s.last_sale.text) {
+          note.textContent = s.last_sale.text;
+        } else {
+          note.textContent = "Name the card, then choose who pays 2.";
+        }
+
+        const canSell = selling && pick.card && pick.claim && pick.buyer !== null && pick.buyer !== undefined;
+        document.getElementById("btn-sell").hidden = !selling;
+        document.getElementById("btn-sell").disabled = !canSell;
+        document.getElementById("btn-look").hidden = !buying;
+        document.getElementById("btn-look").disabled = !buying || !me || me.coins < 1;
+        document.getElementById("btn-accept").hidden = !buying;
+        document.getElementById("btn-accept").disabled = !buying;
+        document.getElementById("btn-end-manifest").hidden = s.phase === "won";
+
+        const turn = document.getElementById("pad-turn");
+        if (s.phase === "won") {
+          turn.className = "pad-turn your-turn";
+          turn.textContent = s.tied ? "Tie · scores below" : "Final scores";
+        } else if (selling) {
+          turn.className = "pad-turn your-turn";
+          turn.textContent = "Your turn · sell one card";
+        } else if (buying) {
+          turn.className = "pad-turn your-turn";
+          turn.textContent = "You paid 2 · look or stand";
+        } else {
+          turn.className = "pad-turn waiting";
+          const who = (s.players || []).find(function (p) { return p.seat === s.actor_seat; });
+          turn.textContent = "Waiting · " + (who ? who.name : "the table");
+        }
+
+        document.getElementById("pad-meta").textContent =
+          (me ? me.name + " · " + me.score : "Seat " + seat) +
+          " · MANIFEST" +
+          (s.status ? " · " + s.status : "");
+        document.getElementById("pad-todo").textContent =
+          "Sell one card from your hand. Name it before they pay 2. " +
+          "They may pay 1 to look. No look: the sale stands as named. " +
+          "Match: it stands. Miss: the sale fails and you pay them 3, or whatever you have. " +
+          "Then draw back to 3. Score = coins + market.";
+      }
+
+      function syncBots(n) {
+        lastComputers = Number(n) || 0;
+        document.querySelectorAll(".bot-n").forEach(function (btn) {
+          const on = Number(btn.getAttribute("data-computers")) === lastComputers;
+          btn.classList.toggle("active", on);
+          btn.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+      }
+
+      function render(s) {
+        state = s;
+        const rules = Holo.rulesId(s);
+        const spike = rules === "spike";
+        const manifest = rules === "manifest";
+        syncPicker(rules);
+        if (s.computers !== undefined && s.computers !== null) syncBots(s.computers);
+        document.getElementById("manifest-pad").hidden = !manifest;
+        document.getElementById("flip-hand").hidden = manifest;
+        document.getElementById("flip-actions").hidden = manifest;
+        Holo.renderScoreCard(document.getElementById("score-card"), s);
+        if (manifest) {
+          renderManifestPad(s);
+          return;
+        }
+
+        document.getElementById("btn-hit").textContent = spike
+          ? "Draw · Hit"
+          : "Hit · Draw";
+        document.getElementById("btn-stay").textContent = spike
+          ? "Stand · Bank"
+          : "Stay · Bank";
+        document.getElementById("pad-todo").innerHTML = spike
+          ? "Spike. Hand total nearest 0. Bomb-out if |sum| &gt; 23. " +
+            'Public: <a href="index.html#REACTOR">Holotable Games</a>.'
+          : "Containment Lock / Overcharge Pulse / Neutralizer Shield resolve in the " +
+            "Flip 7 rules on the Holotable. Public table: " +
+            '<a href="index.html#REACTOR">Holotable Games</a>. ' +
+            "Seat via <code>?seat=0</code>, <code>?seat=1</code>, …";
+
+        const hand = document.getElementById("hand");
+        hand.innerHTML = "";
+        (s.hand || []).forEach(function (c) {
+          hand.appendChild(cardEl(c, spike));
+        });
+
+        const sumEl = document.getElementById("pad-sum");
+        if (spike) {
+          sumEl.hidden = false;
+          const hs = s.hand_sum || 0;
+          sumEl.textContent =
+            "Sum " + (hs > 0 ? "+" : "") + hs +
+            " · stand " + (s.turn_score || 0) +
+            " · to " + (s.target || 100);
+        } else {
+          sumEl.hidden = false;
+          sumEl.textContent =
+            "Turn charge " + (s.turn_score || 0) +
+            (!spike && s.shield ? " · SHIELD" : "") +
+            " · to " + (s.target || 200);
+        }
+
+        const can = s.can_act && s.active_seat === seat;
+        document.getElementById("btn-hit").disabled = !can;
+        document.getElementById("btn-stay").disabled = !can;
+
+        const turn = document.getElementById("pad-turn");
+        if (can) {
+          turn.className = "pad-turn your-turn";
+          turn.textContent = "Your turn · act now";
+        } else if (s.active_seat === seat) {
+          turn.className = "pad-turn waiting";
+          turn.textContent = "Your seat · resolving…";
+        } else {
+          turn.className = "pad-turn waiting";
+          const who = (s.players || []).find(function (p) { return p.seat === s.active_seat; });
+          const label = who
+            ? (who.is_bot ? who.name + " (CPU)" : who.name)
+            : ("seat " + s.active_seat);
+          turn.textContent = "Waiting · " + label;
+        }
+
+        const me = (s.players || []).find(function (p) { return p.seat === seat; });
+        document.getElementById("pad-meta").textContent =
+          (me ? me.name + " · " + me.score + " pts" : "Seat " + seat) +
+          " · " + (s.title || (spike ? "Spike" : "Flip 7")) +
+          (s.status ? " · " + s.status : "");
+      }
+
+      document.getElementById("btn-hit").addEventListener("click", function () {
+        client && client.hit(seat).catch(function (e) {
+          document.getElementById("pad-meta").textContent = String(e.message || e);
+        });
+      });
+      document.getElementById("btn-stay").addEventListener("click", function () {
+        client && client.stay(seat).catch(function (e) {
+          document.getElementById("pad-meta").textContent = String(e.message || e);
+        });
+      });
+      document.getElementById("btn-new").addEventListener("click", function () {
+        client && client.newMatch(null, null, lastComputers).catch(function (e) {
+          document.getElementById("pad-meta").textContent = String(e.message || e);
+        });
+      });
+      document.getElementById("btn-new-manifest").addEventListener("click", function () {
+        client && client.newMatch(null, null, lastComputers).catch(function (e) {
+          document.getElementById("pad-meta").textContent = String(e.message || e);
+        });
+      });
+      document.getElementById("manifest-pad").addEventListener("click", function (e) {
+        const roleBtn = e.target.closest("[data-role]");
+        if (roleBtn && client) {
+          client.setRole(roleBtn.getAttribute("data-role"), seat).catch(function (err) {
+            document.getElementById("pad-meta").textContent = String(err.message || err);
+          });
+          return;
+        }
+        const cardBtn = e.target.closest("[data-card]");
+        if (cardBtn) {
+          pick.card = cardBtn.getAttribute("data-card");
+          pick.claim = cardBtn.getAttribute("data-good");
+          if (state) render(state);
+          return;
+        }
+        const claimBtn = e.target.closest("[data-claim]");
+        if (claimBtn) {
+          pick.claim = claimBtn.getAttribute("data-claim");
+          if (state) render(state);
+          return;
+        }
+        const buyerBtn = e.target.closest("[data-buyer]");
+        if (buyerBtn && !buyerBtn.disabled) {
+          pick.buyer = Number(buyerBtn.getAttribute("data-buyer"));
+          if (state) render(state);
+        }
+      });
+      document.getElementById("btn-sell").addEventListener("click", function () {
+        if (!client || !pick.card || !pick.claim || pick.buyer === null) return;
+        client.sell(pick.card, pick.claim, pick.buyer, seat).catch(function (e) {
+          document.getElementById("pad-meta").textContent = String(e.message || e);
+        });
+      });
+      document.getElementById("btn-look").addEventListener("click", function () {
+        client && client.look(true, seat).catch(function (e) {
+          document.getElementById("pad-meta").textContent = String(e.message || e);
+        });
+      });
+      document.getElementById("btn-accept").addEventListener("click", function () {
+        client && client.look(false, seat).catch(function (e) {
+          document.getElementById("pad-meta").textContent = String(e.message || e);
+        });
+      });
+      document.getElementById("btn-end-manifest").addEventListener("click", function () {
+        client && client.endGame(seat).catch(function (e) {
+          document.getElementById("pad-meta").textContent = String(e.message || e);
+        });
+      });
+      document.getElementById("game-picker").addEventListener("change", function (e) {
+        if (!client) return;
+        const game = e.target.value;
+        if (game === lastRules) return;
+        client.setGame(game, null, lastComputers).catch(function (err) {
+          document.getElementById("pad-meta").textContent = String(err.message || err);
+          e.target.value = lastRules;
+        });
+      });
+      document.getElementById("bot-picker").addEventListener("click", function (e) {
+        const btn = e.target.closest("button[data-computers]");
+        if (!btn || !client) return;
+        const n = Number(btn.getAttribute("data-computers"));
+        if (n === lastComputers) return;
+        client.setComputers(n).catch(function (err) {
+          document.getElementById("pad-meta").textContent = String(err.message || err);
+        });
+      });
+
+      const conn = document.getElementById("conn");
+      client = Holo.connect({
+        role: "pad",
+        seat: seat,
+        onConn: function (ok) {
+          conn.textContent = ok ? "link OK · ws" : "link… (REST poll)";
+          conn.className = "conn " + (ok ? "ok" : "bad");
+        },
+        onState: render,
+        onError: function (err) {
+          document.getElementById("pad-meta").textContent = String(err);
+        },
+      });
+    })();
+  </script>
+</body>
+</html>

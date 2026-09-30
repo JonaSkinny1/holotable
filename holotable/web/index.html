@@ -3,19 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Helios — Ohio Outpost // Sol-3 Holotable</title>
+  <title>Holotable — Ohio Outpost // Sol-3</title>
   <link rel="stylesheet" href="css/holo.css" />
 </head>
-<body class="helios">
-  <header class="helios-top">
-    <div class="helios-brand">
-      <span class="name">Helios</span>
+<body class="holotable">
+  <header class="holotable-top">
+    <div class="holotable-brand">
+      <span class="name">Holotable</span>
       <span class="sub">Ohio Outpost // Sol-3 · Pepper’s Ghost table</span>
     </div>
     <nav class="station-bar" aria-label="Stations">
       <button type="button" data-station="WEATHER" class="active"><span class="key">1</span>Weather</button>
       <button type="button" data-station="NAV"><span class="key">2</span>Nav</button>
-      <button type="button" data-station="REACTOR"><span class="key">3</span>Reactor</button>
+      <button type="button" data-station="REACTOR"><span class="key">3</span>Games</button>
       <button type="button" data-station="BIO"><span class="key">4</span>Bio</button>
       <button type="button" data-station="COMMS"><span class="key">5</span>Comms</button>
     </nav>
@@ -61,22 +61,16 @@
 
     <!-- REACTOR -->
     <section class="station-panel" id="station-REACTOR" data-station-panel="REACTOR">
-      <div class="game-picker panel" id="game-picker" role="radiogroup" aria-label="Select table game">
-        <h2>Table game · tap once to switch</h2>
-        <div class="picker-row">
-          <button type="button" class="pick active" data-game="flip7" id="pick-flip7"
-                  role="radio" aria-checked="true">
-            Reactor Overload
-            <span class="pick-sub">Flip 7 · race to 200</span>
-          </button>
-          <button type="button" class="pick" data-game="sabacc" id="pick-sabacc"
-                  role="radio" aria-checked="false">
-            Sabacc
-            <span class="pick-sub">Spike house · toward 0</span>
-          </button>
-        </div>
+      <div class="panel games-tab">
+        <h2>Games</h2>
+        <label class="game-one" for="game-picker">All games</label>
+        <select id="game-picker" aria-label="Choose a game">
+          <option value="flip7" data-game="flip7">Flip 7</option>
+          <option value="spike" data-game="spike">Spike</option>
+          <option value="manifest" data-game="manifest">MANIFEST</option>
+        </select>
         <p class="legend" id="game-disclaimer">
-          Fan/home private table. Sabacc here is a simplified house game — not a licensed Lucasfilm product.
+          Flip 7 on the Holotable. First to 200.
         </p>
       </div>
 
@@ -95,14 +89,27 @@
       </div>
 
       <div class="match-hud" id="match-hud" aria-live="polite">
-        <div class="hud-game" id="hud-game">Reactor Overload</div>
+        <div class="hud-game" id="hud-game">Flip 7</div>
         <div class="hud-turn" id="hud-turn">Standby</div>
         <div class="hud-target" id="hud-target">Race to 200</div>
       </div>
 
-      <div class="reactor-grid">
+      <section class="score-card" id="score-card" aria-label="Scores"></section>
+
+      <div id="manifest-board" class="manifest-board" hidden>
+        <div class="panel">
+          <h2>MANIFEST · markets face up</h2>
+          <p class="manifest-offer" id="manifest-offer">Sell one card. Name it before they pay.</p>
+          <div class="manifest-seats" id="manifest-seats"></div>
+          <div class="final-scores" id="manifest-final" hidden></div>
+          <p class="legend" id="manifest-legend">Score = coins + market. One card 2, a pair 6, three of a kind 10.</p>
+          <button type="button" class="end-game" id="btn-end-table">End game · show scores</button>
+        </div>
+      </div>
+
+      <div class="reactor-grid" id="reactor-grid">
         <div class="panel reactor-core-wrap">
-          <h2 id="reactor-title">Reactor Overload · Flip 7 rules</h2>
+          <h2 id="reactor-title">Flip 7</h2>
           <div class="reactor-core" id="reactor-core">
             <span class="core-label" id="core-label">Turn charge</span>
             <span class="core-value" id="turn-score">0</span>
@@ -115,18 +122,17 @@
           <p class="legend" id="hand-sum-line" hidden>Hand sum: <strong id="hand-sum">0</strong></p>
         </div>
         <aside class="panel">
-          <h2 id="scores-heading">Crew scores</h2>
-          <ul class="scores" id="scores"></ul>
+          <h2 id="scores-heading">Rules</h2>
           <p class="legend" id="rules-legend">
             First to <strong>200</strong>.<br />
             Freeze → <strong>Containment Lock</strong><br />
             Flip 3 → <strong>Overcharge Pulse</strong><br />
             Second Chance → <strong>Neutralizer Shield</strong><br />
-            Seven unique → <strong>Reactor Overload</strong> (+15)
+            Seven unique → <strong>Flip 7</strong> (+15)
           </p>
         </aside>
       </div>
-      <div class="status-bar" id="status" role="status">Reactor standby</div>
+      <div class="status-bar" id="status" role="status">Holotable standby</div>
       <p class="todo">
         Solo: set <strong>Computers</strong> above, open
         <a href="pad.html?seat=0">pad seat 0</a>.
@@ -162,7 +168,7 @@
     </section>
   </main>
 
-  <footer class="foot-hint">HELIOS · Ohio ground station · software holotable · no actuators / MQTT in this build</footer>
+  <footer class="foot-hint">HOLOTABLE · Ohio ground station · no actuators / MQTT in this build</footer>
 
   <script src="js/holo.js"></script>
   <script>
@@ -178,14 +184,13 @@
         "Freeze → <strong>Containment Lock</strong><br />" +
         "Flip 3 → <strong>Overcharge Pulse</strong><br />" +
         "Second Chance → <strong>Neutralizer Shield</strong><br />" +
-        "Seven unique → <strong>Reactor Overload</strong> (+15)";
+        "Seven unique → <strong>Flip 7</strong> (+15)";
 
-      const SABACC_LEGEND =
-        "Goal: hand total nearest <strong>0</strong> (Spike).<br />" +
+      const SPIKE_LEGEND =
+        "Goal: hand total nearest <strong>0</strong>.<br />" +
         "Bomb-out if <strong>|sum| &gt; 23</strong>.<br />" +
-        "Stand scores <strong>24 − |sum|</strong> (Pure Sabacc = 24).<br />" +
-        "First to <strong>100</strong>. 2–4 players.<br />" +
-        "<em>House rules · not Lucasfilm licensed</em>";
+        "Stand scores <strong>24 − |sum|</strong> (Pure Spike = 24).<br />" +
+        "First to <strong>100</strong>. 2–4 players.";
 
       function showStation(id) {
         current = id;
@@ -249,12 +254,118 @@
       const conn = document.getElementById("conn");
 
       function syncPicker(rules) {
-        lastRules = rules === "sabacc" ? "sabacc" : "flip7";
-        document.querySelectorAll(".pick").forEach(function (btn) {
-          const on = btn.getAttribute("data-game") === lastRules;
-          btn.classList.toggle("active", on);
-          btn.setAttribute("aria-checked", on ? "true" : "false");
+        lastRules = Holo.rulesId({ rules: rules });
+        const sel = document.getElementById("game-picker");
+        if (sel && sel.value !== lastRules) sel.value = lastRules;
+      }
+
+      function esc(s) {
+        return String(s == null ? "" : s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function renderManifest(state) {
+        document.getElementById("reactor-title").textContent = "MANIFEST";
+        document.getElementById("hud-game").textContent = "MANIFEST";
+        document.getElementById("hud-target").textContent =
+          "Round " + (state.round || 1) + " of " + (state.round_limit || 8);
+        document.getElementById("game-disclaimer").textContent =
+          "MANIFEST. Name the good before they pay. Buyer pays 2. Look costs 1. A miss fails the sale.";
+
+        const turnEl = document.getElementById("hud-turn");
+        if (state.phase === "won") {
+          turnEl.textContent = state.tied
+            ? "Tie"
+            : (state.winner && state.winner.name ? state.winner.name + " wins" : "Scores");
+        } else if (state.phase === "looking" && state.offer) {
+          turnEl.innerHTML =
+            "Look · <strong>" + esc(state.offer.buyer_name) + "</strong>" +
+            '<span class="seat-pill">S' + state.offer.buyer_seat + "</span>";
+        } else {
+          const ap = activePlayer(state);
+          if (ap) {
+            turnEl.innerHTML =
+              "Sell · <strong>" + esc(ap.name) + "</strong>" +
+              '<span class="seat-pill">S' + ap.seat + "</span>";
+          } else {
+            turnEl.textContent = "Standby";
+          }
+        }
+
+        document.getElementById("status").textContent = state.status || "";
+        const offerEl = document.getElementById("manifest-offer");
+        if (state.phase === "looking" && state.offer) {
+          offerEl.textContent =
+            state.offer.seller_name + " names " + state.offer.claim.name +
+            " for " + state.offer.buyer_name + ". Paid 2. " +
+            state.offer.buyer_name + " may pay 1 to look, or let the sale stand.";
+        } else if (state.last_sale && state.last_sale.text) {
+          offerEl.textContent = state.last_sale.text;
+        } else {
+          offerEl.textContent = "Sell one card from your hand. Name it before they pay.";
+        }
+
+        const seats = document.getElementById("manifest-seats");
+        seats.innerHTML = "";
+        (state.players || []).forEach(function (p) {
+          const box = document.createElement("article");
+          box.className = "manifest-seat" + (p.active ? " active" : "") + (p.leading ? " leading" : "");
+          const head = document.createElement("header");
+          const who = document.createElement("span");
+          who.className = "who";
+          who.textContent = p.name;
+          head.appendChild(who);
+          if (p.active) {
+            const badge = document.createElement("span");
+            badge.className = "turn-badge";
+            badge.textContent = "TURN";
+            head.appendChild(badge);
+          }
+          if (p.is_bot) {
+            const cpu = document.createElement("span");
+            cpu.className = "bot-badge";
+            cpu.textContent = "CPU";
+            head.appendChild(cpu);
+          }
+          const role = document.createElement("span");
+          role.className = "role";
+          role.textContent = p.role_label || "No side picked";
+          head.appendChild(role);
+          box.appendChild(head);
+
+          const breakdown = document.createElement("p");
+          breakdown.className = "breakdown";
+          breakdown.textContent = p.coins + " coins · market " + p.market_points;
+          box.appendChild(breakdown);
+
+          const lines = document.createElement("p");
+          lines.className = "lines";
+          const parts = (p.market_lines || []).map(function (line) {
+            return line.name + " ×" + line.count + " — " + line.points;
+          });
+          lines.textContent = parts.length ? parts.join(" · ") : "Market is empty";
+          box.appendChild(lines);
+
+          const market = document.createElement("div");
+          market.className = "hand-row";
+          (p.market || []).forEach(function (c) {
+            const el = document.createElement("div");
+            el.className = "mini-card good";
+            el.setAttribute("data-good", c.id || "");
+            el.textContent = Holo.goodName(c);
+            market.appendChild(el);
+          });
+          box.appendChild(market);
+          seats.appendChild(box);
         });
+
+        const finalEl = document.getElementById("manifest-final");
+        finalEl.hidden = true;
+        document.getElementById("manifest-legend").textContent =
+          state.score_legend || "Score = coins + market. One card 2, a pair 6, three of a kind 10.";
+        document.getElementById("btn-end-table").hidden = state.phase === "won";
       }
 
       function syncBots(n) {
@@ -276,18 +387,30 @@
       }
 
       function renderReactor(state) {
-        const sabacc = Holo.isSabacc(state);
-        syncPicker(sabacc ? "sabacc" : "flip7");
+        const rules = Holo.rulesId(state);
+        const spike = rules === "spike";
+        const manifest = rules === "manifest";
+        syncPicker(rules);
+        Holo.renderScoreCard(document.getElementById("score-card"), state);
+        document.getElementById("manifest-board").hidden = !manifest;
+        document.getElementById("reactor-grid").hidden = manifest;
         if (state.computers !== undefined && state.computers !== null) {
           syncBots(state.computers);
         }
+        if (manifest) {
+          renderManifest(state);
+          return;
+        }
+        document.getElementById("game-disclaimer").textContent = spike
+          ? "Spike on the Holotable. Nearest zero. First to 100."
+          : "Flip 7 on the Holotable. First to 200.";
 
-        const gameTitle = sabacc ? "Sabacc" : "Reactor Overload";
-        document.getElementById("reactor-title").textContent = sabacc
-          ? "Sabacc · Spike house rules"
-          : "Reactor Overload · Flip 7 rules";
+        const gameTitle = spike ? "Spike" : "Flip 7";
+        document.getElementById("reactor-title").textContent = spike
+          ? "Spike"
+          : "Flip 7";
         document.getElementById("hud-game").textContent = gameTitle;
-        document.getElementById("hud-target").textContent = sabacc
+        document.getElementById("hud-target").textContent = spike
           ? "Race to " + (state.target || 100)
           : "Race to " + (state.target || 200);
 
@@ -301,19 +424,17 @@
           turnEl.textContent = "Standby";
         }
 
-        document.getElementById("core-label").textContent = sabacc
+        document.getElementById("core-label").textContent = spike
           ? (state.hand_sum !== undefined ? "Hand sum" : "Potential")
           : "Turn charge";
-        document.getElementById("turn-score").textContent = sabacc
+        document.getElementById("turn-score").textContent = spike
           ? (state.hand_sum !== undefined ? (state.hand_sum > 0 ? "+" : "") + state.hand_sum : state.turn_score)
           : state.turn_score;
-        document.getElementById("rules-legend").innerHTML = sabacc ? SABACC_LEGEND : FLIP7_LEGEND;
-        document.getElementById("scores-heading").textContent = sabacc
-          ? "Crew piles · to 100"
-          : "Crew piles · to 200";
+        document.getElementById("rules-legend").innerHTML = spike ? SPIKE_LEGEND : FLIP7_LEGEND;
+        document.getElementById("scores-heading").textContent = "Rules";
 
         const sumLine = document.getElementById("hand-sum-line");
-        if (sabacc) {
+        if (spike) {
           sumLine.hidden = false;
           const hs = state.hand_sum || 0;
           document.getElementById("hand-sum").textContent = (hs > 0 ? "+" : "") + hs +
@@ -325,35 +446,18 @@
         document.getElementById("last-flip").textContent = Holo.cardShort(state.last_flip);
         document.getElementById("last-hint").textContent =
           state.last_flip && state.last_flip !== "—"
-            ? state.last_flip + (!sabacc && state.shield ? " · Neutralizer Shield armed" : "")
-            : (sabacc ? "awaiting draw" : "awaiting flux");
+            ? state.last_flip + (!spike && state.shield ? " · Neutralizer Shield armed" : "")
+            : (spike ? "awaiting draw" : "awaiting flux");
         document.getElementById("status").textContent = state.status || "";
         const core = document.getElementById("reactor-core");
         core.classList.toggle("bust", /bust|bomb/i.test(state.status || ""));
-
-        const ul = document.getElementById("scores");
-        ul.innerHTML = "";
-        (state.players || []).forEach(function (p) {
-          const li = document.createElement("li");
-          if (p.active) li.className = "active";
-          if (p.is_bot) li.classList.add("is-bot");
-          const badge = p.active ? '<span class="turn-badge">TURN</span>' : "";
-          const kind = p.is_bot
-            ? '<span class="bot-badge">CPU</span>'
-            : '<span class="human-badge">HUMAN</span>';
-          li.innerHTML =
-            '<span><span class="pile-label">SEAT ' + p.seat + "</span>" +
-            p.name + " " + kind + badge + "</span>" +
-            '<span class="pts">' + p.score + "</span>";
-          ul.appendChild(li);
-        });
 
         const hand = document.getElementById("public-hand");
         hand.innerHTML = "";
         (state.hand || []).forEach(function (c) {
           const el = document.createElement("div");
           let cls = "mini-card";
-          if (sabacc) {
+          if (spike) {
             const pol = Holo.cardPolarity(c);
             if (pol) cls += " " + pol;
           } else if (Holo.isActionLabel(c)) {
@@ -365,12 +469,19 @@
         });
       }
 
-      document.getElementById("game-picker").addEventListener("click", function (e) {
-        const btn = e.target.closest("button[data-game]");
-        if (!btn || !client) return;
-        const game = btn.getAttribute("data-game");
+      document.getElementById("game-picker").addEventListener("change", function (e) {
+        if (!client) return;
+        const game = e.target.value;
         if (game === lastRules) return;
         client.setGame(game, null, lastComputers).catch(function (err) {
+          document.getElementById("status").textContent = String(err.message || err);
+          e.target.value = lastRules;
+        });
+      });
+
+      document.getElementById("btn-end-table").addEventListener("click", function () {
+        if (!client) return;
+        client.endGame(null).catch(function (err) {
           document.getElementById("status").textContent = String(err.message || err);
         });
       });
