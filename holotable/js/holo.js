@@ -30,10 +30,18 @@
     let retry = 0;
     let pollTimer = null;
 
+    function statePath() {
+      let path = "/api/state";
+      if (seat !== undefined && seat !== null && seat !== "") {
+        path += "?seat=" + encodeURIComponent(seat);
+      }
+      return path;
+    }
+
     function startPoll() {
       if (pollTimer) return;
       pollTimer = setInterval(function () {
-        fetch("/api/state")
+        fetch(statePath())
           .then(function (r) { return r.json(); })
           .then(onState)
           .catch(function () {});
@@ -93,10 +101,14 @@
     }
 
     function post(path, body) {
+      const payload = body || {};
+      if (seat !== undefined && seat !== null && seat !== "" && payload.seat === undefined) {
+        payload.seat = seat;
+      }
       return fetch(path, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body || {}),
+        body: JSON.stringify(payload),
       }).then(function (r) {
         return r.json().then(function (j) {
           if (!r.ok) throw new Error(j.error || r.statusText);
@@ -160,8 +172,43 @@
       return Promise.resolve();
     }
 
+    function sell(cardUid, claimId, buyerSeat, s) {
+      const seatNum = s !== undefined ? s : seat;
+      const payload = {
+        type: "sell",
+        seat: seatNum,
+        card: cardUid,
+        claim: claimId,
+        buyer: buyerSeat,
+      };
+      if (!send(payload)) return post("/api/sell", payload);
+      return Promise.resolve();
+    }
+
+    function look(want, s) {
+      const seatNum = s !== undefined ? s : seat;
+      const payload = { type: "look", seat: seatNum, look: !!want };
+      if (!send(payload)) return post("/api/look", payload);
+      return Promise.resolve();
+    }
+
+    function endGame(s) {
+      const payload = { type: "end" };
+      const seatNum = s !== undefined ? s : seat;
+      if (seatNum !== undefined && seatNum !== null && seatNum !== "") payload.seat = seatNum;
+      if (!send(payload)) return post("/api/end", payload);
+      return Promise.resolve();
+    }
+
+    function setRole(role, s) {
+      const seatNum = s !== undefined ? s : seat;
+      const payload = { type: "set_role", seat: seatNum, role: role };
+      if (!send(payload)) return post("/api/role", payload);
+      return Promise.resolve();
+    }
+
     open();
-    fetch("/api/state").then(function (r) { return r.json(); }).then(onState).catch(function () {});
+    fetch(statePath()).then(function (r) { return r.json(); }).then(onState).catch(function () {});
 
     return {
       hit: hit,
@@ -169,6 +216,10 @@
       newMatch: newMatch,
       setGame: setGame,
       setComputers: setComputers,
+      sell: sell,
+      look: look,
+      endGame: endGame,
+      setRole: setRole,
       close: function () {
         closed = true;
         stopPoll();
@@ -192,6 +243,22 @@
 
   function isSabacc(state) {
     return state && (state.rules === "sabacc" || state.game === "sabacc");
+  }
+
+  function isManifest(state) {
+    return state && (state.rules === "manifest" || state.game === "manifest");
+  }
+
+  function rulesId(state) {
+    if (isManifest(state)) return "manifest";
+    if (isSabacc(state)) return "sabacc";
+    return "flip7";
+  }
+
+  function goodName(card) {
+    if (!card) return "—";
+    if (typeof card === "string") return card;
+    return card.name || card.id || "—";
   }
 
   function cardPolarity(label) {
@@ -235,6 +302,9 @@
     cardShort: cardShort,
     isActionLabel: isActionLabel,
     isSabacc: isSabacc,
+    isManifest: isManifest,
+    rulesId: rulesId,
+    goodName: goodName,
     cardPolarity: cardPolarity,
     Stations: Stations,
   };

@@ -16,7 +16,7 @@ HUMAN_FILL = ("Engineer", "Gunner", "Science")
 
 def max_players_for_game(game: str) -> int:
     g = (game or "flip7").strip().lower()
-    if g in ("sabacc", "spike", "corellian"):
+    if g in ("sabacc", "spike", "corellian", "manifest"):
         return 4
     return 6
 

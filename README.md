@@ -1,6 +1,6 @@
-# Flip 7 · Helios · Reactor Overload · Sabacc
+# Flip 7 · Helios · Reactor Overload · Sabacc · MANIFEST
 
-Python **Flip 7** rules engine plus a **Helios** five-station holotable web UI. The **REACTOR** station is a multiplayer table with a **game picker**: **Reactor Overload** (Flip 7 reskin) or **Sabacc** (simplified Corellian Spike–inspired house rules). Private datapads drive Hit/Draw and Stay/Stand.
+Python **Flip 7** rules engine plus a **Helios** five-station holotable web UI. The app stays the Holotable. The **REACTOR** station is a multiplayer table with a **game picker**: **Reactor Overload** (Flip 7 reskin), **Sabacc** (simplified Corellian Spike–inspired house rules), or **MANIFEST** (original goods game). Private datapads drive the active game.
 
 Software only in this repo — no physical Pepper’s Ghost hardware, actuators, or MQTT.
 
@@ -13,6 +13,7 @@ Software only in this repo — no physical Pepper’s Ghost hardware, actuators,
 | **Helios** | Ground-station shell on the public holotable: **WEATHER · NAV · REACTOR · BIO · COMMS** (keys `1`–`5`). Black / teal / hazard chrome for Pepper’s Ghost demos (**Ohio Outpost // Sol-3** / Ohio ground-station flavor). |
 | **Reactor Overload** | Full Flip 7 game on the REACTOR station: real `flip7` deck & scoring, Containment Lock / Overcharge Pulse / Neutralizer Shield labels, race to **200**. |
 | **Sabacc** | Second REACTOR game: +/- cards, goal near **0**, bomb-out if \|sum\| > 23, race to **100**. Switch via the on-table game picker (or `POST /api/game`). |
+| **MANIFEST** | Third REACTOR game. Original. Sell one hand card, name it, buyer pays 2. Optional look for 1. Highest coins + market after 8 rounds, or when the table ends the game. |
 | **Other stations** | Polished **MOCK** stubs (solar/Kp, Earth/ISS orbit, vials SP-01–SP-08, frequency dial). Live APIs optional later. |
 
 ## Run — terminal Flip 7
@@ -60,9 +61,24 @@ REST: `POST /api/computers` with `{"computers":2}`. WebSocket: `{"type":"set_com
 ### Switch games
 
 - On the **REACTOR** panel (or datapad): tap **Reactor Overload** or **Sabacc**.
-- REST: `POST /api/game` with `{"game":"sabacc"}` or `{"game":"flip7"}`.
-- WebSocket: `{"type":"set_game","game":"sabacc"}`.
-- Boot: `python3 -m flip7.server --game sabacc`.
+- REST: `POST /api/game` with `{"game":"sabacc"}`, `{"game":"flip7"}`, or `{"game":"manifest"}`.
+- WebSocket: `{"type":"set_game","game":"manifest"}`.
+- Boot: `python3 -m flip7.server --game sabacc` or `--game manifest`.
+
+### MANIFEST
+
+Original goods game on the same seats and server. No second process. Card faces are `{id, name}` so a picture can replace the label later.
+
+- **Players:** 2–4. Each starts with **5 coins**, **3 face-up market cards**, **3 hand cards**.
+- **Goods only:** Helion, plant canisters, books, antiques, star charts.
+- **Turn:** sell one card from your hand to another player. Name it before they pay. They pay **2**.
+- **Look:** they may pay **1** to look. No look: the sale stands as named. Match: it stands. Miss: the sale fails and the seller pays **3**, or whatever they have.
+- **Draw:** the seller draws back to 3. Used cards go back under the deck.
+- **Score:** coins + market. One card **2**, a pair **6**, three of a kind **10**. Highest wins after **8** rounds, or when the table ends the game.
+- **Side:** merchant, smuggler, pirate, or scavenger — you pick. Nobody is assigned one. It does not change the sale.
+- **Pads:** `pad.html?seat=0` and `pad.html?seat=1`. Hands stay on that datapad. The public table shows markets, coins, and the named sale.
+
+REST: `POST /api/sell` `{"seat","card","claim","buyer"}`, `POST /api/look` `{"seat","look":true|false}`, `POST /api/end`, `POST /api/role` `{"seat","role"}`. WebSocket types: `sell`, `look`, `end`, `set_role`.
 
 ### Static-only (UI chrome, no engine)
 
@@ -114,7 +130,7 @@ Details: `holotable/BRIDGE.md` (UX notes).
 
 ## Architecture
 
-- `flip7/` — Flip 7 (`deck`, `game`, `turn`, `live`) + Sabacc (`sabacc`, `sabacc_live`) + computer opponents (`bots`) + `server` (stdlib HTTP + WebSocket).
+- `flip7/` — Flip 7 (`deck`, `game`, `turn`, `live`) + Sabacc (`sabacc`, `sabacc_live`) + MANIFEST (`manifest`, `manifest_live`) + computer opponents (`bots`) + `server` (stdlib HTTP + WebSocket).
 - `holotable/` — Helios static UI (`index.html`, `pad.html`, `css/`, `js/`).
 - See `holotable/BRIDGE.md`.
 
@@ -123,6 +139,7 @@ Details: `holotable/BRIDGE.md` (UX notes).
 - [x] Terminal multiplayer rules engine
 - [x] Helios five-station shell + Reactor Overload live server
 - [x] Sabacc as second REACTOR game + game picker
+- [x] MANIFEST as a third REACTOR game on the same Holotable server
 - [x] Computer opponents (solo / fill seats; server-driven)
 - [ ] Godot 4 table UI / Pepper’s Ghost layout (phase 2)
 - [ ] Physical Pepper’s Ghost, Helios station hardware, actuators, MQTT / Home Assistant

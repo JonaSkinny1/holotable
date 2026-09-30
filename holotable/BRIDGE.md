@@ -5,7 +5,7 @@
 - **`flip7/`** Python package: Flip 7 rules (`deck`, `game`, `turn`, `live`) and Sabacc (`sabacc`, `sabacc_live`).
 - **`python -m flip7.server`**: serves `holotable/` static UI, REST (`/api/*`), WebSocket (`/ws`).
 - **Helios shell** (`index.html`): five stations (keys 1–5). WEATHER / NAV / BIO / COMMS are labeled mocks. Branding: **Ohio Outpost // Sol-3** / Ohio ground station.
-- **REACTOR**: live match with **game picker** — `LiveMatch` (Flip 7 / Reactor Overload) or `SabaccLiveMatch`.
+- **REACTOR**: live match with **game picker** — `LiveMatch` (Flip 7 / Reactor Overload), `SabaccLiveMatch`, or `ManifestLiveMatch`.
 - **Datapads** (`pad.html?seat=N`): private Hit / Stay (Draw / Stand in Sabacc); state synced over WebSocket (REST poll fallback).
 
 ## UX notes (holotable UI pass)
@@ -23,13 +23,18 @@ Kiosk / monitor contrast and touch-friendly controls (CSS/HTML/JS only; engine u
 
 | Method | Path / message | Body |
 | --- | --- | --- |
-| POST | `/api/game` | `{"game":"sabacc"\|"flip7", "players"?: [...], "seed"?: n}` |
+| POST | `/api/game` | `{"game":"sabacc"\|"flip7"\|"manifest", "players"?: [...], "seed"?: n}` |
+| POST | `/api/sell` | MANIFEST only. `{"seat", "card", "claim", "buyer"}` — name the good, buyer pays 2 |
+| POST | `/api/look` | MANIFEST buyer. `{"seat", "look": true\|false}` |
+| POST | `/api/end` | MANIFEST. The table ends and scores are shown |
+| POST | `/api/role` | MANIFEST label only. `{"seat", "role":"merchant"\|"smuggler"\|"pirate"\|"scavenger"}` |
 | POST | `/api/new` | optional `"game"` to switch while resetting |
 | WS | `set_game` | `{"type":"set_game","game":"sabacc"}` |
+| WS | `sell` / `look` / `end` / `set_role` | MANIFEST actions. Pad snapshots include only that seat's hand. |
 | GET | `/api/games` | lists games + `active` |
 | GET | `/api/health` | includes `active_game`, `outpost` |
 
-Snapshot always includes `rules` / `game` (`flip7` or `sabacc`) so the UI can re-skin.
+Snapshot always includes `rules` / `game` (`flip7`, `sabacc`, or `manifest`) so the UI can re-skin. MANIFEST public snapshots omit hand faces. `GET /api/state?seat=N` and pad WebSockets include that seat's `your_hand`.
 
 ## Out of scope (this build)
 

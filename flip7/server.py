@@ -19,13 +19,14 @@ from typing import Any, Dict, List, Optional, Set, Union
 
 from .bots import BOT_NAMES, build_roster, decide_from_snapshot
 from .live import DEFAULT_CREW, LiveMatch
+from .manifest_live import ManifestLiveMatch
 from .sabacc_live import SabaccLiveMatch
 from . import wsutil
 
 ROOT = Path(__file__).resolve().parent.parent
 STATIC_DIR = ROOT / "holotable"
 
-MatchType = Union[LiveMatch, SabaccLiveMatch]
+MatchType = Union[LiveMatch, SabaccLiveMatch, ManifestLiveMatch]
 
 _state_lock = threading.Lock()
 _game_id = "flip7"
@@ -61,6 +62,8 @@ def set_match(m: MatchType, game_id: Optional[str] = None, computers: Optional[i
             _game_id = game_id
         elif isinstance(m, SabaccLiveMatch):
             _game_id = "sabacc"
+        elif isinstance(m, ManifestLiveMatch):
+            _game_id = "manifest"
         else:
             _game_id = "flip7"
         if computers is not None:
@@ -98,20 +101,46 @@ def _roster_for(
     return build_roster(computers=computers, human_names=human_names, game=game)
 
 
+def normalize_game(game: str) -> str:
+    g = (game or "").strip().lower()
+    if g in ("flip7", "reactor", "reactor_overload", "flip"):
+        return "flip7"
+    if g in ("sabacc", "spike", "corellian"):
+        return "sabacc"
+    if g == "manifest":
+        return "manifest"
+    raise ValueError("Unknown game — use flip7, sabacc, or manifest")
+
+
+def _make_match(game: str, names: List[str], rng, bot_seats: Set[int]) -> MatchType:
+    if game == "sabacc":
+        return SabaccLiveMatch(names, rng=rng, bot_seats=bot_seats)
+    if game == "manifest":
+        return ManifestLiveMatch(names, rng=rng, bot_seats=bot_seats)
+    return LiveMatch(names, rng=rng, bot_seats=bot_seats)
+
+
+def _clamp_names(game: str, names: List[str]) -> List[str]:
+    if game == "flip7":
+        if not (2 <= len(names) <= 6):
+            return list(DEFAULT_CREW[: max(2, min(4, len(names) or 2))])
+        return names
+    # Sabacc and MANIFEST: 2–4 seats
+    if len(names) > 4:
+        names = names[:4]
+    if len(names) < 2:
+        names = list(DEFAULT_CREW[:2])
+    return names
+
+
 def switch_game(
     game: str,
     player_names: Optional[List[str]] = None,
     seed: Optional[int] = None,
     computers: Optional[int] = None,
 ) -> dict:
-    """Start a new match of flip7 or sabacc on the REACTOR table."""
-    g = (game or "").strip().lower()
-    if g in ("flip7", "reactor", "reactor_overload", "flip"):
-        g = "flip7"
-    elif g in ("sabacc", "spike", "corellian"):
-        g = "sabacc"
-    else:
-        raise ValueError("Unknown game — use flip7 or sabacc")
+    """Start a new match of flip7, sabacc, or manifest on the REACTOR table."""
+    g = normalize_game(game)
 
     n_comp = get_computers() if computers is None else max(0, min(3, int(computers)))
 
@@ -122,18 +151,9 @@ def switch_game(
     # Explicit players list without a computers key → all-human (API compat).
     # When computers is set/preserved, rebuild Pilot + bot roster.
     if player_names is not None and computers is None:
-        names = list(player_names)
-        bot_seats: Set[int] = set()
-        if g == "sabacc":
-            if len(names) > 4:
-                names = names[:4]
-            if len(names) < 2:
-                names = DEFAULT_CREW[:2]
-            m: MatchType = SabaccLiveMatch(names, rng=rng, bot_seats=bot_seats)
-        else:
-            if not (2 <= len(names) <= 6):
-                names = DEFAULT_CREW[: max(2, min(4, len(names) or 2))]
-            m = LiveMatch(names, rng=rng, bot_seats=bot_seats)
+        names = _clamp_names(g, list(player_names))
+        bot_seats = set()
+        m = _make_match(g, names, rng, bot_seats)
         set_match(m, game_id=g, computers=0)
         return m.snapshot()
 
@@ -144,10 +164,7 @@ def switch_game(
         humans = filtered or ["Pilot"]
 
     names, bot_seats = _roster_for(g, n_comp, humans)
-    if g == "sabacc":
-        m = SabaccLiveMatch(names, rng=rng, bot_seats=bot_seats)
-    else:
-        m = LiveMatch(names, rng=rng, bot_seats=bot_seats)
+    m = _make_match(g, names, rng, bot_seats)
     set_match(m, game_id=g, computers=n_comp)
     return m.snapshot()
 
@@ -193,13 +210,24 @@ class WsClient:
             self.sock.sendall(data)
 
 
+def _view_for(client: WsClient, state: dict) -> dict:
+    """Pads get that seat's private hand. The table gets the public snapshot."""
+    match = get_match()
+    if client.role == "pad" and client.seat is not None and hasattr(match, "snapshot_for"):
+        try:
+            return match.snapshot_for(client.seat)
+        except Exception:
+            return state
+    return state
+
+
 def broadcast(state: dict) -> None:
     dead: List[WsClient] = []
     with _clients_lock:
         clients = list(_clients)
     for c in clients:
         try:
-            c.send_json({"type": "state", "state": state})
+            c.send_json({"type": "state", "state": _view_for(c, state)})
         except Exception:
             dead.append(c)
     if dead:
@@ -219,6 +247,32 @@ def _cancel_bot_timer() -> None:
             _bot_timer = None
 
 
+def _bot_seat_to_act(state: dict) -> Optional[int]:
+    """Seat a computer must act on, or None. MANIFEST looks are the buyer's decision."""
+    if not state or state.get("phase") == "won" or state.get("winner"):
+        return None
+    rules = state.get("rules") or state.get("game")
+    players = state.get("players") or []
+    if rules == "manifest":
+        if state.get("phase") == "selling":
+            seat = state.get("active_seat")
+            if not any(p.get("seat") != seat and int(p.get("coins") or 0) >= 2 for p in players):
+                return None
+        elif state.get("phase") == "looking":
+            seat = (state.get("offer") or {}).get("buyer_seat")
+        else:
+            return None
+    else:
+        if state.get("phase") != "choosing" or not state.get("can_act"):
+            return None
+        seat = state.get("active_seat")
+    if seat is None or not isinstance(seat, int) or seat < 0 or seat >= len(players):
+        return None
+    if not players[seat].get("is_bot"):
+        return None
+    return seat
+
+
 def _run_bot_turn(expected_match_id: int, expected_seat: int) -> None:
     match = get_match()
     try:
@@ -227,9 +281,13 @@ def _run_bot_turn(expected_match_id: int, expected_seat: int) -> None:
         return
     if state.get("match_id") != expected_match_id:
         return
-    if state.get("phase") != "choosing" or not state.get("can_act"):
+    if _bot_seat_to_act(state) != expected_seat:
         return
-    if state.get("active_seat") != expected_seat:
+    if (state.get("rules") or state.get("game")) == "manifest":
+        try:
+            match.bot_act(expected_seat)  # type: ignore[attr-defined]
+        except (RuntimeError, ValueError, TypeError):
+            pass
         return
     decision = decide_from_snapshot(state)
     if decision is None:
@@ -245,15 +303,8 @@ def _run_bot_turn(expected_match_id: int, expected_seat: int) -> None:
 
 def _schedule_bot_if_needed(state: dict) -> None:
     _cancel_bot_timer()
-    if not state or state.get("phase") != "choosing" or not state.get("can_act"):
-        return
-    if state.get("winner"):
-        return
-    seat = state.get("active_seat")
-    players = state.get("players") or []
-    if seat is None or seat < 0 or seat >= len(players):
-        return
-    if not players[seat].get("is_bot"):
+    seat = _bot_seat_to_act(state)
+    if seat is None:
         return
     mid = state.get("match_id")
     try:
@@ -274,6 +325,35 @@ def _on_match_update(state: dict) -> None:
 
 
 _match.on_update(_on_match_update)
+
+
+def _seat_from_body(body: dict) -> Optional[int]:
+    if "seat" not in body or body.get("seat") is None or body.get("seat") == "":
+        return None
+    return int(body["seat"])
+
+
+def _private_view(snap: dict, body: dict) -> dict:
+    """REST replies to a datapad include that seat's hand."""
+    seat = _seat_from_body(body)
+    match = get_match()
+    if seat is None or not hasattr(match, "snapshot_for"):
+        return snap
+    try:
+        return match.snapshot_for(seat)
+    except (RuntimeError, ValueError, TypeError):
+        return snap
+
+
+def _state_for_query(qs: Dict[str, List[str]]) -> dict:
+    match = get_match()
+    raw = (qs.get("seat") or [None])[0]
+    if raw is None or not str(raw).lstrip("-").isdigit() or not hasattr(match, "snapshot_for"):
+        return match.snapshot()
+    try:
+        return match.snapshot_for(int(raw))
+    except (RuntimeError, ValueError, TypeError):
+        return match.snapshot()
 
 
 def json_bytes(obj: Any, code: int = 200) -> tuple[int, bytes, str]:
@@ -307,7 +387,7 @@ class HeliosHandler(BaseHTTPRequestHandler):
             self._websocket(qs)
             return
         if path in ("/api/state", "/api/reactor/state"):
-            self._send(*json_bytes(get_match().snapshot()))
+            self._send(*json_bytes(_state_for_query(qs)))
             return
         if path == "/api/health":
             self._send(
@@ -317,7 +397,7 @@ class HeliosHandler(BaseHTTPRequestHandler):
                         "shell": "HELIOS",
                         "outpost": "Ohio Outpost // Sol-3",
                         "reactor": "Reactor Overload",
-                        "games": ["flip7", "sabacc"],
+                        "games": ["flip7", "sabacc", "manifest"],
                         "active_game": get_game_id(),
                         "computers": get_computers(),
                         "bot_names": list(BOT_NAMES[:3]),
@@ -332,6 +412,7 @@ class HeliosHandler(BaseHTTPRequestHandler):
                         "games": [
                             {"id": "flip7", "title": "Reactor Overload (Flip 7)"},
                             {"id": "sabacc", "title": "Sabacc (Spike house rules)"},
+                            {"id": "manifest", "title": "MANIFEST"},
                         ],
                         "active": get_game_id(),
                         "computers": get_computers(),
@@ -361,7 +442,7 @@ class HeliosHandler(BaseHTTPRequestHandler):
                     raise ValueError("Need computers (0–3)")
                 humans = _human_names_from_body(body)
                 snap = apply_computers(n, human_names=humans, seed=body.get("seed"), game=body.get("game"))
-                self._send(*json_bytes(snap))
+                self._send(*json_bytes(_private_view(snap, body)))
                 return
             if path in ("/api/game", "/api/reactor/game"):
                 names = _human_names_from_body(body)
@@ -369,7 +450,7 @@ class HeliosHandler(BaseHTTPRequestHandler):
                 game = body.get("game") or body.get("rules") or body.get("id")
                 computers = _parse_computers(body)
                 snap = switch_game(str(game), player_names=names, seed=seed, computers=computers)
-                self._send(*json_bytes(snap))
+                self._send(*json_bytes(_private_view(snap, body)))
                 return
             if path in ("/api/new", "/api/reactor/new"):
                 names = _human_names_from_body(body)
@@ -382,22 +463,49 @@ class HeliosHandler(BaseHTTPRequestHandler):
                         seed=seed,
                         computers=computers if computers is not None else get_computers(),
                     )
-                    self._send(*json_bytes(snap))
+                    self._send(*json_bytes(_private_view(snap, body)))
                     return
                 snap = new_match_with_options(match, names, seed, computers)
-                self._send(*json_bytes(snap))
+                self._send(*json_bytes(_private_view(snap, body)))
                 return
             if path in ("/api/hit", "/api/reactor/hit"):
                 seat = int(body.get("seat", 0))
                 snap = match.hit(seat)
-                self._send(*json_bytes(snap))
+                self._send(*json_bytes(_private_view(snap, body)))
                 return
             if path in ("/api/stay", "/api/reactor/stay"):
                 seat = int(body.get("seat", 0))
                 snap = match.stay(seat)
-                self._send(*json_bytes(snap))
+                self._send(*json_bytes(_private_view(snap, body)))
                 return
-        except (RuntimeError, ValueError, TypeError) as exc:
+            if path in ("/api/sell", "/api/manifest/sell"):
+                seat = int(body.get("seat", 0))
+                buyer = body.get("buyer", body.get("buyer_seat"))
+                card = body.get("card", body.get("card_uid"))
+                claim = body.get("claim", body.get("claim_id"))
+                snap = match.sell(seat, card, claim, int(buyer))  # type: ignore[attr-defined]
+                self._send(*json_bytes(_private_view(snap, body)))
+                return
+            if path in ("/api/look", "/api/manifest/look"):
+                seat = int(body.get("seat", 0))
+                look = body.get("look", body.get("inspect"))
+                if isinstance(look, str):
+                    look = look.strip().lower() in ("1", "true", "yes", "look")
+                snap = match.look(seat, bool(look))  # type: ignore[attr-defined]
+                self._send(*json_bytes(_private_view(snap, body)))
+                return
+            if path in ("/api/end", "/api/manifest/end"):
+                raw_seat = body.get("seat")
+                seat = int(raw_seat) if raw_seat is not None and raw_seat != "" else None
+                snap = match.end_match(seat)  # type: ignore[attr-defined]
+                self._send(*json_bytes(_private_view(snap, body)))
+                return
+            if path in ("/api/role", "/api/manifest/role"):
+                seat = int(body.get("seat", 0))
+                snap = match.set_role(seat, body.get("role"))  # type: ignore[attr-defined]
+                self._send(*json_bytes(_private_view(snap, body)))
+                return
+        except (RuntimeError, ValueError, TypeError, AttributeError) as exc:
             self._send(*json_bytes({"error": str(exc)}, 400))
             return
 
@@ -457,7 +565,7 @@ def _handle_ws(handler: HeliosHandler, key: str, role: str, seat: Optional[int])
         _clients.add(client)
     try:
         client.send_json({"type": "hello", "role": role, "seat": seat})
-        client.send_json({"type": "state", "state": get_match().snapshot()})
+        client.send_json({"type": "state", "state": _view_for(client, get_match().snapshot())})
         while True:
             opcode, data = wsutil.read_frame(sock.recv)
             if opcode == 0x8:
@@ -493,6 +601,25 @@ def _dispatch_ws(client: WsClient, msg: dict) -> None:
         elif mtype == "stay":
             seat = int(msg.get("seat", client.seat if client.seat is not None else 0))
             match.stay(seat)
+        elif mtype == "sell":
+            seat = int(msg.get("seat", client.seat if client.seat is not None else 0))
+            buyer = msg.get("buyer", msg.get("buyer_seat"))
+            card = msg.get("card", msg.get("card_uid"))
+            claim = msg.get("claim", msg.get("claim_id"))
+            match.sell(seat, card, claim, int(buyer))  # type: ignore[attr-defined]
+        elif mtype == "look":
+            seat = int(msg.get("seat", client.seat if client.seat is not None else 0))
+            look = msg.get("look", msg.get("inspect"))
+            if isinstance(look, str):
+                look = look.strip().lower() in ("1", "true", "yes", "look")
+            match.look(seat, bool(look))  # type: ignore[attr-defined]
+        elif mtype == "end":
+            raw_seat = msg.get("seat", client.seat)
+            seat = int(raw_seat) if raw_seat is not None and raw_seat != "" else None
+            match.end_match(seat)  # type: ignore[attr-defined]
+        elif mtype == "set_role":
+            seat = int(msg.get("seat", client.seat if client.seat is not None else 0))
+            match.set_role(seat, msg.get("role"))  # type: ignore[attr-defined]
         elif mtype == "new":
             computers = _parse_computers(msg)
             if msg.get("game") or msg.get("rules"):
@@ -529,8 +656,8 @@ def _dispatch_ws(client: WsClient, msg: dict) -> None:
         elif mtype == "ping":
             client.send_json({"type": "pong"})
         elif mtype == "get_state":
-            client.send_json({"type": "state", "state": match.snapshot()})
-    except (RuntimeError, ValueError, TypeError) as exc:
+            client.send_json({"type": "state", "state": _view_for(client, match.snapshot())})
+    except (RuntimeError, ValueError, TypeError, AttributeError) as exc:
         try:
             client.send_json({"type": "error", "error": str(exc)})
         except Exception:
@@ -538,7 +665,7 @@ def _dispatch_ws(client: WsClient, msg: dict) -> None:
 
 
 def main(argv: Optional[List[str]] = None) -> None:
-    parser = argparse.ArgumentParser(description="Helios holotable — Flip 7 / Sabacc server")
+    parser = argparse.ArgumentParser(description="Holotable — Flip 7 / Sabacc / MANIFEST server")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8766)
     parser.add_argument("--players", type=int, default=2, help="2–4 crew seats at boot (ignored if --computers set)")
@@ -551,7 +678,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     parser.add_argument(
         "--game",
         default="flip7",
-        choices=("flip7", "sabacc"),
+        choices=("flip7", "sabacc", "manifest"),
         help="Boot game on REACTOR (default flip7)",
     )
     args = parser.parse_args(argv)
@@ -566,6 +693,8 @@ def main(argv: Optional[List[str]] = None) -> None:
 
     if args.game == "sabacc":
         set_match(SabaccLiveMatch(names, bot_seats=bot_seats), game_id="sabacc", computers=n_comp)
+    elif args.game == "manifest":
+        set_match(ManifestLiveMatch(names, bot_seats=bot_seats), game_id="manifest", computers=n_comp)
     else:
         set_match(LiveMatch(names, bot_seats=bot_seats), game_id="flip7", computers=n_comp)
 
