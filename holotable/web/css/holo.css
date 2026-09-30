@@ -769,7 +769,7 @@ a { color: var(--teal-bright); }
   color: var(--muted);
 }
 
-/* Stake polarity on mini / pad cards — same teal, orange, and text as home */
+/* Spike polarity on mini / pad cards — same teal, orange, and text as home */
 .mini-card.pos, .card.pos {
   border-color: var(--teal);
   color: var(--teal-bright);

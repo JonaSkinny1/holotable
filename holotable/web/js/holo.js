@@ -1,5 +1,5 @@
 /**
- * Holotable client — WebSocket state + REST fallback for Flip 7, Stake, and MANIFEST.
+ * Holotable client — WebSocket state + REST fallback for Flip 7, Spike, and MANIFEST.
  * Weather, Nav, Bio, and Comms are local mock demos (labeled).
  */
 (function (global) {
@@ -241,8 +241,8 @@
     return /Lock|Pulse|Shield|FREEZE|FLIP|SECOND|Null/i.test(String(label));
   }
 
-  function isStake(state) {
-    return state && (state.rules === "stake" || state.game === "stake");
+  function isSpike(state) {
+    return state && (state.rules === "spike" || state.game === "spike");
   }
 
   function isManifest(state) {
@@ -251,7 +251,7 @@
 
   function rulesId(state) {
     if (isManifest(state)) return "manifest";
-    if (isStake(state)) return "stake";
+    if (isSpike(state)) return "spike";
     return "flip7";
   }
 
@@ -294,7 +294,7 @@
       });
       heart = { icon: "♥", label: "Pair", on: pair };
       star = { icon: "★", label: "Three", on: triple };
-    } else if (rules === "stake") {
+    } else if (rules === "spike") {
       (state.hand || []).forEach(function (c) { tiles.push(cardShort(c)); });
       const sum = Number(state.hand_sum || 0);
       const limit = Number(state.bomb_limit || 23);
@@ -418,7 +418,7 @@
     connect: connect,
     cardShort: cardShort,
     isActionLabel: isActionLabel,
-    isStake: isStake,
+    isSpike: isSpike,
     isManifest: isManifest,
     rulesId: rulesId,
     goodName: goodName,

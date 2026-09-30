@@ -7,10 +7,10 @@ from http.server import ThreadingHTTPServer
 
 from holotable.server import HolotableHandler, set_match, switch_game, get_game_id
 from holotable.live import LiveMatch
-from holotable.stake_live import StakeLiveMatch
+from holotable.spike_live import SpikeLiveMatch
 
 
-class TestStakeServer(unittest.TestCase):
+class TestSpikeServer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         set_match(LiveMatch(["Pilot", "Engineer"], rng=random.Random(99)), game_id="flip7")
@@ -44,23 +44,23 @@ class TestStakeServer(unittest.TestCase):
         except error.HTTPError as e:
             return e.code, json.loads(e.read().decode())
 
-    def test_switch_to_stake(self):
-        code, state = self._post("/api/game", {"game": "stake", "players": ["A", "B"], "seed": 3})
+    def test_switch_to_spike(self):
+        code, state = self._post("/api/game", {"game": "spike", "players": ["A", "B"], "seed": 3})
         self.assertEqual(code, 200)
-        self.assertEqual(state.get("rules"), "stake")
-        self.assertEqual(state.get("title"), "Stake")
+        self.assertEqual(state.get("rules"), "spike")
+        self.assertEqual(state.get("title"), "Spike")
         self.assertIn("hand_sum", state)
-        self.assertEqual(get_game_id(), "stake")
+        self.assertEqual(get_game_id(), "spike")
 
         code, health = self._get("/api/health")
-        self.assertEqual(health.get("active_game"), "stake")
+        self.assertEqual(health.get("active_game"), "spike")
         self.assertEqual(health.get("outpost"), "Ohio Outpost // Sol-3")
 
         code, games = self._get("/api/games")
-        self.assertEqual(games.get("active"), "stake")
+        self.assertEqual(games.get("active"), "spike")
         ids = [g["id"] for g in games["games"]]
         self.assertIn("flip7", ids)
-        self.assertIn("stake", ids)
+        self.assertIn("spike", ids)
 
     def test_switch_back_flip7(self):
         code, state = self._post("/api/game", {"game": "flip7", "players": ["X", "Y"], "seed": 2})
@@ -72,7 +72,7 @@ class TestStakeServer(unittest.TestCase):
         with request.urlopen(self.base + "/", timeout=3) as resp:
             body = resp.read().decode()
             self.assertIn("game-picker", body)
-            self.assertIn("Stake", body)
+            self.assertIn("Spike", body)
             self.assertNotIn("Youngstown", body)
             self.assertIn("Ohio Outpost", body)
 

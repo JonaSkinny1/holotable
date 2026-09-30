@@ -20,7 +20,7 @@
       <label class="game-one" for="game-picker">All games</label>
       <select id="game-picker" aria-label="Choose a game">
         <option value="flip7" data-game="flip7">Flip 7</option>
-        <option value="stake" data-game="stake">Stake</option>
+        <option value="spike" data-game="spike">Spike</option>
         <option value="manifest" data-game="manifest">MANIFEST</option>
       </select>
     </div>
@@ -106,11 +106,11 @@
       let lastComputers = 0;
       let pick = { match: null, phase: null, card: null, claim: null, buyer: null };
 
-      function cardEl(label, stake) {
+      function cardEl(label, spike) {
         const div = document.createElement("div");
         const action = Holo.isActionLabel(label);
         let cls = "card";
-        if (stake) {
+        if (spike) {
           const pol = Holo.cardPolarity(label);
           if (pol) cls += " " + pol;
         } else if (action) {
@@ -118,13 +118,13 @@
         }
         div.className = cls;
         const short = Holo.cardShort(label);
-        if (!stake && action) {
+        if (!spike && action) {
           div.innerHTML =
             '<span class="rank">' + short + "</span>" +
             '<span class="sub">' + String(label).split(" ")[0] + "</span>";
-        } else if (stake) {
+        } else if (spike) {
           div.innerHTML =
-            '<span class="rank">' + short + '</span><span class="sub">stake</span>';
+            '<span class="rank">' + short + '</span><span class="sub">spike</span>';
         } else {
           div.innerHTML =
             '<span class="rank">' + short + '</span><span class="sub">flux</span>';
@@ -301,7 +301,7 @@
       function render(s) {
         state = s;
         const rules = Holo.rulesId(s);
-        const stake = rules === "stake";
+        const spike = rules === "spike";
         const manifest = rules === "manifest";
         syncPicker(rules);
         if (s.computers !== undefined && s.computers !== null) syncBots(s.computers);
@@ -314,14 +314,14 @@
           return;
         }
 
-        document.getElementById("btn-hit").textContent = stake
+        document.getElementById("btn-hit").textContent = spike
           ? "Draw · Hit"
           : "Hit · Draw";
-        document.getElementById("btn-stay").textContent = stake
+        document.getElementById("btn-stay").textContent = spike
           ? "Stand · Bank"
           : "Stay · Bank";
-        document.getElementById("pad-todo").innerHTML = stake
-          ? "Stake. Hand total nearest 0. Bomb-out if |sum| &gt; 23. " +
+        document.getElementById("pad-todo").innerHTML = spike
+          ? "Spike. Hand total nearest 0. Bomb-out if |sum| &gt; 23. " +
             'Public: <a href="index.html#REACTOR">Holotable Games</a>.'
           : "Containment Lock / Overcharge Pulse / Neutralizer Shield resolve in the " +
             "Flip 7 rules on the Holotable. Public table: " +
@@ -331,11 +331,11 @@
         const hand = document.getElementById("hand");
         hand.innerHTML = "";
         (s.hand || []).forEach(function (c) {
-          hand.appendChild(cardEl(c, stake));
+          hand.appendChild(cardEl(c, spike));
         });
 
         const sumEl = document.getElementById("pad-sum");
-        if (stake) {
+        if (spike) {
           sumEl.hidden = false;
           const hs = s.hand_sum || 0;
           sumEl.textContent =
@@ -346,7 +346,7 @@
           sumEl.hidden = false;
           sumEl.textContent =
             "Turn charge " + (s.turn_score || 0) +
-            (!stake && s.shield ? " · SHIELD" : "") +
+            (!spike && s.shield ? " · SHIELD" : "") +
             " · to " + (s.target || 200);
         }
 
@@ -373,7 +373,7 @@
         const me = (s.players || []).find(function (p) { return p.seat === seat; });
         document.getElementById("pad-meta").textContent =
           (me ? me.name + " · " + me.score + " pts" : "Seat " + seat) +
-          " · " + (s.title || (stake ? "Stake" : "Flip 7")) +
+          " · " + (s.title || (spike ? "Spike" : "Flip 7")) +
           (s.status ? " · " + s.status : "");
       }
 

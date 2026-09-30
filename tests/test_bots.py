@@ -19,7 +19,7 @@ from holotable.bots import (  # noqa: E402
     build_roster,
     decide_from_snapshot,
     flip7_decide,
-    stake_decide,
+    spike_decide,
 )
 from holotable.live import LiveMatch  # noqa: E402
 from holotable.server import HolotableHandler, set_match, apply_computers  # noqa: E402
@@ -39,8 +39,8 @@ class TestBotHelpers(unittest.TestCase):
         self.assertEqual(len(names), 2)
         self.assertEqual(seats, set())
 
-    def test_stake_cap(self):
-        names, seats = build_roster(computers=3, game="stake")
+    def test_spike_cap(self):
+        names, seats = build_roster(computers=3, game="spike")
         self.assertEqual(len(names), 4)  # 1 human + 3 bots
         self.assertEqual(len(seats), 3)
 
@@ -53,11 +53,11 @@ class TestBotHelpers(unittest.TestCase):
         hand = [10, 12, 8]
         self.assertEqual(flip7_decide(hand, shield=False, turn_score=40), "stay")
 
-    def test_stake_decide_near_zero(self):
-        self.assertEqual(stake_decide(0), "stay")
-        self.assertEqual(stake_decide(2), "stay")
-        self.assertEqual(stake_decide(-15), "hit")
-        self.assertEqual(stake_decide(20), "stay")
+    def test_spike_decide_near_zero(self):
+        self.assertEqual(spike_decide(0), "stay")
+        self.assertEqual(spike_decide(2), "stay")
+        self.assertEqual(spike_decide(-15), "hit")
+        self.assertEqual(spike_decide(20), "stay")
 
     def test_decide_from_snapshot_bot(self):
         state = {
