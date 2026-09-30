@@ -69,9 +69,7 @@
           <option value="spike" data-game="spike">Spike</option>
           <option value="manifest" data-game="manifest">MANIFEST</option>
         </select>
-        <p class="legend" id="game-disclaimer">
-          Flip 7 on the Holotable. First to 200.
-        </p>
+        <p class="legend" id="game-disclaimer">Flip 7.</p>
       </div>
 
       <div class="bot-picker panel" id="bot-picker" role="group" aria-label="Computer opponents">
@@ -88,51 +86,9 @@
         </p>
       </div>
 
-      <div class="match-hud" id="match-hud" aria-live="polite">
-        <div class="hud-game" id="hud-game">Flip 7</div>
-        <div class="hud-turn" id="hud-turn">Standby</div>
-        <div class="hud-target" id="hud-target">Race to 200</div>
-      </div>
-
       <section class="score-card" id="score-card" aria-label="Scores"></section>
-
-      <div id="manifest-board" class="manifest-board" hidden>
-        <div class="panel">
-          <h2>MANIFEST · markets face up</h2>
-          <p class="manifest-offer" id="manifest-offer">Sell one card. Name it before they pay.</p>
-          <div class="manifest-seats" id="manifest-seats"></div>
-          <div class="final-scores" id="manifest-final" hidden></div>
-          <p class="legend" id="manifest-legend">Score = coins + market. One card 2, a pair 6, three of a kind 10.</p>
-          <button type="button" class="end-game" id="btn-end-table">End game · show scores</button>
-        </div>
-      </div>
-
-      <div class="reactor-grid" id="reactor-grid">
-        <div class="panel reactor-core-wrap">
-          <h2 id="reactor-title">Flip 7</h2>
-          <div class="reactor-core" id="reactor-core">
-            <span class="core-label" id="core-label">Turn charge</span>
-            <span class="core-value" id="turn-score">0</span>
-          </div>
-          <div class="last-flip">
-            <div class="flip-card" id="last-flip">—</div>
-            <div class="flip-hint" id="last-hint">awaiting flux</div>
-          </div>
-          <div class="hand-row" id="public-hand" aria-label="Public hand"></div>
-          <p class="legend" id="hand-sum-line" hidden>Hand sum: <strong id="hand-sum">0</strong></p>
-        </div>
-        <aside class="panel">
-          <h2 id="scores-heading">Rules</h2>
-          <p class="legend" id="rules-legend">
-            First to <strong>200</strong>.<br />
-            Freeze → <strong>Containment Lock</strong><br />
-            Flip 3 → <strong>Overcharge Pulse</strong><br />
-            Second Chance → <strong>Neutralizer Shield</strong><br />
-            Seven unique → <strong>Flip 7</strong> (+15)
-          </p>
-        </aside>
-      </div>
-      <div class="status-bar" id="status" role="status">Holotable standby</div>
+      <p class="play-note" id="status" role="status"></p>
+      <button type="button" class="end-game" id="btn-end-table" hidden>End game · show scores</button>
       <p class="todo">
         Solo: set <strong>Computers</strong> above, open
         <a href="pad.html?seat=0">pad seat 0</a>.
@@ -178,19 +134,6 @@
       let client = null;
       let lastRules = "flip7";
       let lastComputers = 0;
-
-      const FLIP7_LEGEND =
-        "First to <strong>200</strong>.<br />" +
-        "Freeze → <strong>Containment Lock</strong><br />" +
-        "Flip 3 → <strong>Overcharge Pulse</strong><br />" +
-        "Second Chance → <strong>Neutralizer Shield</strong><br />" +
-        "Seven unique → <strong>Flip 7</strong> (+15)";
-
-      const SPIKE_LEGEND =
-        "Goal: hand total nearest <strong>0</strong>.<br />" +
-        "Bomb-out if <strong>|sum| &gt; 23</strong>.<br />" +
-        "Stand scores <strong>24 − |sum|</strong> (Pure Spike = 24).<br />" +
-        "First to <strong>100</strong>. 2–4 players.";
 
       function showStation(id) {
         current = id;
@@ -259,112 +202,19 @@
         if (sel && sel.value !== lastRules) sel.value = lastRules;
       }
 
-      function esc(s) {
-        return String(s == null ? "" : s)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;");
-      }
-
       function renderManifest(state) {
-        document.getElementById("reactor-title").textContent = "MANIFEST";
-        document.getElementById("hud-game").textContent = "MANIFEST";
-        document.getElementById("hud-target").textContent =
-          "Round " + (state.round || 1) + " of " + (state.round_limit || 8);
         document.getElementById("game-disclaimer").textContent =
-          "MANIFEST. Name the good before they pay. Buyer pays 2. Look costs 1. A miss fails the sale.";
-
-        const turnEl = document.getElementById("hud-turn");
-        if (state.phase === "won") {
-          turnEl.textContent = state.tied
-            ? "Tie"
-            : (state.winner && state.winner.name ? state.winner.name + " wins" : "Scores");
-        } else if (state.phase === "looking" && state.offer) {
-          turnEl.innerHTML =
-            "Look · <strong>" + esc(state.offer.buyer_name) + "</strong>" +
-            '<span class="seat-pill">S' + state.offer.buyer_seat + "</span>";
-        } else {
-          const ap = activePlayer(state);
-          if (ap) {
-            turnEl.innerHTML =
-              "Sell · <strong>" + esc(ap.name) + "</strong>" +
-              '<span class="seat-pill">S' + ap.seat + "</span>";
-          } else {
-            turnEl.textContent = "Standby";
-          }
-        }
-
-        document.getElementById("status").textContent = state.status || "";
-        const offerEl = document.getElementById("manifest-offer");
+          "MANIFEST. Name the good before they pay. Buyer pays 2. Look costs 1.";
+        const note = document.getElementById("status");
         if (state.phase === "looking" && state.offer) {
-          offerEl.textContent =
+          note.textContent =
             state.offer.seller_name + " names " + state.offer.claim.name +
-            " for " + state.offer.buyer_name + ". Paid 2. " +
-            state.offer.buyer_name + " may pay 1 to look, or let the sale stand.";
+            " for " + state.offer.buyer_name + ". Paid 2.";
         } else if (state.last_sale && state.last_sale.text) {
-          offerEl.textContent = state.last_sale.text;
+          note.textContent = state.last_sale.text;
         } else {
-          offerEl.textContent = "Sell one card from your hand. Name it before they pay.";
+          note.textContent = state.status || "";
         }
-
-        const seats = document.getElementById("manifest-seats");
-        seats.innerHTML = "";
-        (state.players || []).forEach(function (p) {
-          const box = document.createElement("article");
-          box.className = "manifest-seat" + (p.active ? " active" : "") + (p.leading ? " leading" : "");
-          const head = document.createElement("header");
-          const who = document.createElement("span");
-          who.className = "who";
-          who.textContent = p.name;
-          head.appendChild(who);
-          if (p.active) {
-            const badge = document.createElement("span");
-            badge.className = "turn-badge";
-            badge.textContent = "TURN";
-            head.appendChild(badge);
-          }
-          if (p.is_bot) {
-            const cpu = document.createElement("span");
-            cpu.className = "bot-badge";
-            cpu.textContent = "CPU";
-            head.appendChild(cpu);
-          }
-          const role = document.createElement("span");
-          role.className = "role";
-          role.textContent = p.role_label || "No side picked";
-          head.appendChild(role);
-          box.appendChild(head);
-
-          const breakdown = document.createElement("p");
-          breakdown.className = "breakdown";
-          breakdown.textContent = p.coins + " coins · market " + p.market_points;
-          box.appendChild(breakdown);
-
-          const lines = document.createElement("p");
-          lines.className = "lines";
-          const parts = (p.market_lines || []).map(function (line) {
-            return line.name + " ×" + line.count + " — " + line.points;
-          });
-          lines.textContent = parts.length ? parts.join(" · ") : "Market is empty";
-          box.appendChild(lines);
-
-          const market = document.createElement("div");
-          market.className = "hand-row";
-          (p.market || []).forEach(function (c) {
-            const el = document.createElement("div");
-            el.className = "mini-card good";
-            el.setAttribute("data-good", c.id || "");
-            el.textContent = Holo.goodName(c);
-            market.appendChild(el);
-          });
-          box.appendChild(market);
-          seats.appendChild(box);
-        });
-
-        const finalEl = document.getElementById("manifest-final");
-        finalEl.hidden = true;
-        document.getElementById("manifest-legend").textContent =
-          state.score_legend || "Score = coins + market. One card 2, a pair 6, three of a kind 10.";
         document.getElementById("btn-end-table").hidden = state.phase === "won";
       }
 
@@ -377,96 +227,26 @@
         });
       }
 
-      function activePlayer(state) {
-        const seat = state.active_seat;
-        const players = state.players || [];
-        for (let i = 0; i < players.length; i++) {
-          if (players[i].seat === seat) return players[i];
-        }
-        return null;
-      }
-
       function renderReactor(state) {
         const rules = Holo.rulesId(state);
         const spike = rules === "spike";
         const manifest = rules === "manifest";
         syncPicker(rules);
         Holo.renderScoreCard(document.getElementById("score-card"), state);
-        document.getElementById("manifest-board").hidden = !manifest;
-        document.getElementById("reactor-grid").hidden = manifest;
         if (state.computers !== undefined && state.computers !== null) {
           syncBots(state.computers);
         }
+        const endBtn = document.getElementById("btn-end-table");
         if (manifest) {
+          endBtn.hidden = false;
           renderManifest(state);
           return;
         }
+        endBtn.hidden = true;
         document.getElementById("game-disclaimer").textContent = spike
-          ? "Spike on the Holotable. Nearest zero. First to 100."
-          : "Flip 7 on the Holotable. First to 200.";
-
-        const gameTitle = spike ? "Spike" : "Flip 7";
-        document.getElementById("reactor-title").textContent = spike
-          ? "Spike"
-          : "Flip 7";
-        document.getElementById("hud-game").textContent = gameTitle;
-        document.getElementById("hud-target").textContent = spike
-          ? "Race to " + (state.target || 100)
-          : "Race to " + (state.target || 200);
-
-        const ap = activePlayer(state);
-        const turnEl = document.getElementById("hud-turn");
-        if (ap) {
-          turnEl.innerHTML =
-            "Turn · <strong>" + ap.name + "</strong>" +
-            '<span class="seat-pill">S' + ap.seat + "</span>";
-        } else {
-          turnEl.textContent = "Standby";
-        }
-
-        document.getElementById("core-label").textContent = spike
-          ? (state.hand_sum !== undefined ? "Hand sum" : "Potential")
-          : "Turn charge";
-        document.getElementById("turn-score").textContent = spike
-          ? (state.hand_sum !== undefined ? (state.hand_sum > 0 ? "+" : "") + state.hand_sum : state.turn_score)
-          : state.turn_score;
-        document.getElementById("rules-legend").innerHTML = spike ? SPIKE_LEGEND : FLIP7_LEGEND;
-        document.getElementById("scores-heading").textContent = "Rules";
-
-        const sumLine = document.getElementById("hand-sum-line");
-        if (spike) {
-          sumLine.hidden = false;
-          const hs = state.hand_sum || 0;
-          document.getElementById("hand-sum").textContent = (hs > 0 ? "+" : "") + hs +
-            " · stand worth " + (state.turn_score || 0);
-        } else {
-          sumLine.hidden = true;
-        }
-
-        document.getElementById("last-flip").textContent = Holo.cardShort(state.last_flip);
-        document.getElementById("last-hint").textContent =
-          state.last_flip && state.last_flip !== "—"
-            ? state.last_flip + (!spike && state.shield ? " · Neutralizer Shield armed" : "")
-            : (spike ? "awaiting draw" : "awaiting flux");
+          ? "Spike. Nearest zero."
+          : "Flip 7.";
         document.getElementById("status").textContent = state.status || "";
-        const core = document.getElementById("reactor-core");
-        core.classList.toggle("bust", /bust|bomb/i.test(state.status || ""));
-
-        const hand = document.getElementById("public-hand");
-        hand.innerHTML = "";
-        (state.hand || []).forEach(function (c) {
-          const el = document.createElement("div");
-          let cls = "mini-card";
-          if (spike) {
-            const pol = Holo.cardPolarity(c);
-            if (pol) cls += " " + pol;
-          } else if (Holo.isActionLabel(c)) {
-            cls += " action";
-          }
-          el.className = cls;
-          el.textContent = Holo.cardShort(c);
-          hand.appendChild(el);
-        });
       }
 
       document.getElementById("game-picker").addEventListener("change", function (e) {

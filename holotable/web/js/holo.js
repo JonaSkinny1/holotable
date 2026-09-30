@@ -278,36 +278,48 @@
     let heart = { icon: "♥", label: "Heart", on: false };
     let star = { icon: "★", label: "Star", on: false };
 
+    function pair(a, b) {
+      function show(n) {
+        if (n === undefined || n === null || n === "") return "—";
+        return String(n);
+      }
+      return [show(a), show(b)];
+    }
+
     if (rules === "manifest") {
       const active = players.filter(function (p) { return p.seat === state.active_seat; })[0] || players[0];
-      ((active && active.market_lines) || []).forEach(function (line) {
-        tiles.push(String(line.points));
+      const points = ((active && active.market_lines) || []).map(function (line) {
+        return line.points;
       });
-      let pair = false;
+      tiles.push.apply(tiles, pair(points[0], points[1]));
+      let pairOn = false;
       let triple = false;
       players.forEach(function (p) {
         (p.market_lines || []).forEach(function (line) {
           const n = Number(line.count) || 0;
           if (n >= 3) triple = true;
-          if (n === 2 || n === 4 || n === 5) pair = true;
+          if (n === 2 || n === 4 || n === 5) pairOn = true;
         });
       });
-      heart = { icon: "♥", label: "Pair", on: pair };
+      heart = { icon: "♥", label: "Pair", on: pairOn };
       star = { icon: "★", label: "Three", on: triple };
     } else if (rules === "spike") {
-      (state.hand || []).forEach(function (c) { tiles.push(cardShort(c)); });
       const sum = Number(state.hand_sum || 0);
+      const shown = (sum > 0 ? "+" : "") + sum;
+      tiles.push.apply(tiles, pair(shown, state.turn_score));
       const limit = Number(state.bomb_limit || 23);
       const dealt = (state.hand || []).length > 0;
       heart = { icon: "♥", label: "Safe", on: dealt && Math.abs(sum) <= limit };
       star = { icon: "★", label: "Pure", on: dealt && sum === 0 };
     } else {
-      (state.hand || []).forEach(function (c) { tiles.push(cardShort(c)); });
+      let second = "—";
+      const last = state && state.last_flip;
+      if (last !== undefined && last !== null && /^-?\d+$/.test(String(last))) second = String(last);
+      tiles.push.apply(tiles, pair(state && state.turn_score, second));
       heart = { icon: "♥", label: "Shield", on: !!(state && state.shield) };
       const overload = uniqueNumbers(state && state.hand) >= 7 || /overload/i.test(String((state && state.status) || ""));
       star = { icon: "★", label: "Overload", on: overload };
     }
-    if (!tiles.length) tiles.push("—");
 
     return {
       title: state && state.phase === "won" ? "Final scores" : "Scores",

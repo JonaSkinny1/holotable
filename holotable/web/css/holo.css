@@ -894,9 +894,13 @@ kbd {
 .score-card {
   background: var(--panel);
   border: 2px solid var(--teal);
-  border-radius: 16px;
-  padding: 0.9rem 1rem 1rem;
+  border-radius: 22px;
+  padding: 1.2rem 1.35rem 1.35rem;
   box-shadow: var(--glow);
+  max-width: 28rem;
+}
+#station-REACTOR .score-card {
+  margin: 0.25rem auto 0;
 }
 .score-card-title {
   margin: 0.85rem 0 0.45rem;
@@ -914,9 +918,9 @@ kbd {
   gap: 0.55rem;
 }
 .score-tile, .bonus-tile {
-  width: 4.4rem;
-  height: 4.4rem;
-  border-radius: 12px;
+  width: 6.4rem;
+  height: 6.4rem;
+  border-radius: 18px;
   border: 2px solid var(--teal);
   background: var(--panel-hi);
   color: var(--text);
@@ -928,7 +932,7 @@ kbd {
   font-weight: 700;
 }
 .score-tile {
-  font-size: 1.55rem;
+  font-size: 2.4rem;
   color: var(--teal-bright);
 }
 .score-players {
@@ -937,9 +941,9 @@ kbd {
   padding: 0;
 }
 .score-players li {
-  font-size: 1.2rem;
+  font-size: 1.45rem;
   font-weight: 600;
-  padding: 0.35rem 0.15rem;
+  padding: 0.4rem 0.1rem;
   border-bottom: 1px solid rgba(154, 168, 188, 0.25);
 }
 .score-players li.active {
@@ -954,7 +958,19 @@ kbd {
   border-color: var(--orange);
   background: var(--orange-dim);
 }
-.bonus-icon { font-size: 1.45rem; line-height: 1; }
+.bonus-icon { font-size: 2rem; line-height: 1; }
+.play-note {
+  max-width: 28rem;
+  margin: 0.75rem auto 0;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--muted);
+  min-height: 1.2rem;
+}
+#station-REACTOR .end-game {
+  display: block;
+  margin: 0.75rem auto 0;
+}
 .bonus-label {
   margin-top: 0.2rem;
   font-size: 0.58rem;
@@ -964,9 +980,12 @@ kbd {
 }
 .pad-shell .score-tile,
 .pad-shell .bonus-tile {
-  width: 4rem;
-  height: 4rem;
+  width: 5.2rem;
+  height: 5.2rem;
+  border-radius: 14px;
 }
+.pad-shell .score-tile { font-size: 1.8rem; }
+.pad-shell .bonus-icon { font-size: 1.6rem; }
 .pad-shell .score-players li { font-size: 1.05rem; }
 
 /* —— MANIFEST —— */
