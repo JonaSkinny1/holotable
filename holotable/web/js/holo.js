@@ -261,18 +261,10 @@
     return card.name || card.id || "—";
   }
 
-  function uniqueNumbers(hand) {
-    const seen = {};
-    (hand || []).forEach(function (label) {
-      const s = String(label);
-      if (/^-?\d+$/.test(s) && Number(s) !== 0) seen[s] = true;
-    });
-    return Object.keys(seen).length;
-  }
-
-  /** Paper score card: number tiles, player totals, heart and star bonus tiles. */
+  /** Paper score card. Flip 7 uses trays; Spike and MANIFEST keep two tiles. */
   function scoreModel(state) {
     const rules = rulesId(state);
+    if (rules === "flip7") return flipTrayModel(state);
     const players = (state && state.players) || [];
     const tiles = [];
     let heart = { icon: "♥", label: "Heart", on: false };
@@ -311,28 +303,58 @@
       const dealt = (state.hand || []).length > 0;
       heart = { icon: "♥", label: "Safe", on: dealt && Math.abs(sum) <= limit };
       star = { icon: "★", label: "Pure", on: dealt && sum === 0 };
-    } else {
-      let second = "—";
-      const last = state && state.last_flip;
-      if (last !== undefined && last !== null && /^-?\d+$/.test(String(last))) second = String(last);
-      tiles.push.apply(tiles, pair(state && state.turn_score, second));
-      heart = { icon: "♥", label: "Shield", on: !!(state && state.shield) };
-      const overload = uniqueNumbers(state && state.hand) >= 7 || /overload/i.test(String((state && state.status) || ""));
-      star = { icon: "★", label: "Overload", on: overload };
     }
 
     return {
+      layout: "tiles",
       title: state && state.phase === "won" ? "Final scores" : "Scores",
       tiles: tiles,
-      totals: players.map(function (p) {
-        return {
-          label: "Player " + (Number(p.seat) + 1),
-          name: p.name || "",
-          score: p.score,
-          active: !!p.active,
-        };
-      }),
+      totals: playerTotals(players),
       bonuses: [heart, star],
+    };
+  }
+
+  function playerTotals(players) {
+    return players.map(function (p) {
+      return {
+        label: "Player " + (Number(p.seat) + 1),
+        name: p.name || "",
+        score: p.score,
+        active: !!p.active,
+      };
+    });
+  }
+
+  function isFlipNumber(label) {
+    return /^-?\d+$/.test(String(label));
+  }
+
+  /** Action cards only. Heart = shield, star = pulse, diamond = lock. */
+  function flipBonusCard(label) {
+    const s = String(label || "");
+    if (/Shield|SECOND/i.test(s)) return { icon: "♥", label: "Shield" };
+    if (/Pulse|FLIP_THREE|FLIP THREE/i.test(s)) return { icon: "★", label: "Pulse" };
+    if (/Lock|FREEZE/i.test(s)) return { icon: "◆", label: "Lock" };
+    return null;
+  }
+
+  function flipTrayModel(state) {
+    const numbers = [];
+    const bonuses = [];
+    (state.hand || []).forEach(function (card) {
+      if (isFlipNumber(card)) {
+        numbers.push(String(card));
+        return;
+      }
+      const bonus = flipBonusCard(card);
+      if (bonus) bonuses.push(bonus);
+    });
+    return {
+      layout: "trays",
+      title: state && state.phase === "won" ? "Final scores" : "Scores",
+      numbers: numbers,
+      bonuses: bonuses,
+      totals: playerTotals((state && state.players) || []),
     };
   }
 
@@ -340,10 +362,55 @@
     if (!root) return;
     const model = scoreModel(state || {});
     root.innerHTML = "";
+    root.classList.toggle("flip-trays", model.layout === "trays");
 
     const title = document.createElement("h2");
     title.className = "score-card-title";
     title.textContent = model.title;
+
+    const list = document.createElement("ul");
+    list.className = "score-players";
+    model.totals.forEach(function (row) {
+      const li = document.createElement("li");
+      if (row.active) li.className = "active";
+      li.textContent = row.label + (row.name ? " · " + row.name : "") + " — " + row.score;
+      list.appendChild(li);
+    });
+
+    const bonusTitle = document.createElement("h2");
+    bonusTitle.className = "score-card-title";
+    bonusTitle.textContent = "Bonus";
+
+    if (model.layout === "trays") {
+      root.appendChild(title);
+      root.appendChild(list);
+
+      const numbers = document.createElement("div");
+      numbers.className = "flip-tray flip-number-tray";
+      numbers.setAttribute("aria-label", "Number cards");
+      model.numbers.forEach(function (n) {
+        const tile = document.createElement("div");
+        tile.className = "flip-drawn";
+        tile.textContent = n;
+        numbers.appendChild(tile);
+      });
+      root.appendChild(numbers);
+
+      root.appendChild(bonusTitle);
+      const bonus = document.createElement("div");
+      bonus.className = "flip-tray flip-bonus-tray";
+      bonus.setAttribute("aria-label", "Bonus cards");
+      model.bonuses.forEach(function (b) {
+        const tile = document.createElement("div");
+        tile.className = "flip-drawn flip-bonus";
+        tile.setAttribute("aria-label", b.label);
+        tile.textContent = b.icon;
+        bonus.appendChild(tile);
+      });
+      root.appendChild(bonus);
+      return;
+    }
+
     root.appendChild(title);
 
     const strip = document.createElement("div");
@@ -355,20 +422,7 @@
       strip.appendChild(tile);
     });
     root.appendChild(strip);
-
-    const list = document.createElement("ul");
-    list.className = "score-players";
-    model.totals.forEach(function (row) {
-      const li = document.createElement("li");
-      if (row.active) li.className = "active";
-      li.textContent = row.label + (row.name ? " · " + row.name : "") + " — " + row.score;
-      list.appendChild(li);
-    });
     root.appendChild(list);
-
-    const bonusTitle = document.createElement("h2");
-    bonusTitle.className = "score-card-title";
-    bonusTitle.textContent = "Bonus";
     root.appendChild(bonusTitle);
 
     const bonus = document.createElement("div");

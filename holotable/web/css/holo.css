@@ -988,6 +988,64 @@ kbd {
 .pad-shell .bonus-icon { font-size: 1.6rem; }
 .pad-shell .score-players li { font-size: 1.05rem; }
 
+/* Flip 7 only: fixed trays, cards drawn only for what was pulled. */
+.score-card.flip-trays {
+  --flip-card: 3.35rem;
+  --flip-gap: 0.4rem;
+  max-width: 40rem;
+}
+.flip-tray {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: var(--flip-gap);
+  box-sizing: border-box;
+  margin-top: 0.85rem;
+  padding: 0.4rem;
+  border: 2px solid var(--teal);
+  border-radius: 18px;
+  background: var(--panel-hi);
+}
+.flip-number-tray {
+  width: max-content;
+  min-width: calc(7 * var(--flip-card) + 6 * var(--flip-gap) + 0.8rem);
+  min-height: calc(var(--flip-card) + 0.8rem);
+}
+.flip-bonus-tray {
+  width: max-content;
+  min-width: calc(3 * var(--flip-card) + 2 * var(--flip-gap) + 0.8rem);
+  min-height: calc(var(--flip-card) + 0.8rem);
+}
+.flip-drawn {
+  flex: 0 0 auto;
+  width: var(--flip-card);
+  height: var(--flip-card);
+  border-radius: 12px;
+  border: 2px solid var(--teal);
+  background: var(--bg);
+  color: var(--teal-bright);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 1.55rem;
+  font-weight: 700;
+}
+.flip-bonus {
+  color: var(--orange-bright);
+  border-color: var(--orange);
+  font-size: 1.7rem;
+}
+.pad-shell .score-card.flip-trays {
+  --flip-card: 2.3rem;
+  --flip-gap: 0.28rem;
+  max-width: 100%;
+}
+.pad-shell .flip-drawn { font-size: 1.05rem; border-radius: 8px; }
+.pad-shell .flip-bonus { font-size: 1.2rem; }
+.pad-shell .flip-number-tray { max-width: 100%; }
+
 /* —— MANIFEST —— */
 .manifest-board { margin-bottom: 0.75rem; }
 .manifest-offer {
