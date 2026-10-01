@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Holotable — Ohio Outpost // Sol-3</title>
   <link rel="stylesheet" href="css/holo.css" />
+  <script>
+    (function () {
+      var params = new URLSearchParams(location.search);
+      if (params.get("home") === "1") return;
+      if (!window.matchMedia("(max-width: 840px)").matches) return;
+      var seat = params.get("seat") || "0";
+      location.replace("pad.html?seat=" + encodeURIComponent(seat));
+    })();
+  </script>
 </head>
 <body class="holotable">
   <header class="holotable-top">

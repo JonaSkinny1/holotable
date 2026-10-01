@@ -9,7 +9,7 @@
 <body class="pad">
   <div class="pad-shell">
     <div class="pad-bar">
-      <a class="pad-home" href="index.html#WEATHER">Home</a>
+      <a class="pad-home" href="index.html?home=1#WEATHER">Home</a>
       <span class="tag" id="player-tag">Seat 0</span>
     </div>
 
@@ -19,7 +19,6 @@
     <section class="play-hand" id="flip-hand" aria-label="Hand">
       <h2 id="hand-heading">Your hand</h2>
       <div class="hand" id="hand"></div>
-      <p class="pad-sum-line" id="pad-sum" hidden></p>
     </section>
 
     <section class="play-hand" id="manifest-pad" hidden aria-label="MANIFEST">
@@ -57,29 +56,6 @@
 
     <p class="pad-meta" id="pad-meta" hidden></p>
     <p class="conn" id="conn" hidden>…</p>
-
-    <details class="pad-more">
-      <summary>Game</summary>
-      <label class="game-one" for="game-picker">Game</label>
-      <select id="game-picker" aria-label="Choose a game">
-        <option value="flip7" data-game="flip7">Flip 7</option>
-        <option value="spike" data-game="spike">Spike</option>
-        <option value="manifest" data-game="manifest">MANIFEST</option>
-      </select>
-      <div class="bot-picker" id="bot-picker" role="group" aria-label="Computer opponents">
-        <span class="game-one">Computers</span>
-        <div class="bot-row" id="bot-row">
-          <button type="button" class="bot-n active" data-computers="0" aria-pressed="true">0</button>
-          <button type="button" class="bot-n" data-computers="1" aria-pressed="false">1</button>
-          <button type="button" class="bot-n" data-computers="2" aria-pressed="false">2</button>
-          <button type="button" class="bot-n" data-computers="3" aria-pressed="false">3</button>
-        </div>
-      </div>
-      <p id="pad-todo">
-        Open this page on a phone. Seat via <code>?seat=0</code>, <code>?seat=1</code>, …
-        The table shows the same game full screen.
-      </p>
-    </details>
   </div>
   <script src="js/holo.js"></script>
   <script>
@@ -90,7 +66,6 @@
 
       let state = null;
       let client = null;
-      let lastRules = "flip7";
       let lastComputers = 0;
       let pick = { match: null, phase: null, card: null, claim: null, buyer: null };
 
@@ -105,25 +80,11 @@
           cls += " action";
         }
         div.className = cls;
-        const short = Holo.cardShort(label);
-        if (!spike && action) {
-          div.innerHTML =
-            '<span class="rank">' + short + "</span>" +
-            '<span class="sub">' + String(label).split(" ")[0] + "</span>";
-        } else if (spike) {
-          div.innerHTML =
-            '<span class="rank">' + short + '</span><span class="sub">spike</span>';
-        } else {
-          div.innerHTML =
-            '<span class="rank">' + short + '</span><span class="sub">flux</span>';
-        }
+        const rank = document.createElement("span");
+        rank.className = "rank";
+        rank.textContent = Holo.cardShort(label);
+        div.appendChild(rank);
         return div;
-      }
-
-      function syncPicker(rules) {
-        lastRules = Holo.rulesId({ rules: rules });
-        const sel = document.getElementById("game-picker");
-        if (sel && sel.value !== lastRules) sel.value = lastRules;
       }
 
       function goodButton(label, on, attrs) {
@@ -267,11 +228,6 @@
         }
 
         document.getElementById("pad-meta").hidden = true;
-        document.getElementById("pad-todo").textContent =
-          "Sell one card from your hand. Name it before they pay 2. " +
-          "They may pay 1 to look. No look: the sale stands as named. " +
-          "Match: it stands. Miss: the sale fails and you pay them 3, or whatever you have. " +
-          "Then draw back to 3. Score = coins + market.";
       }
 
       function syncBots(n) {
@@ -288,10 +244,8 @@
         const rules = Holo.rulesId(s);
         const spike = rules === "spike";
         const manifest = rules === "manifest";
-        syncPicker(rules);
         if (s.computers !== undefined && s.computers !== null) syncBots(s.computers);
         document.getElementById("manifest-pad").hidden = !manifest;
-        document.getElementById("flip-hand").hidden = manifest;
         document.getElementById("flip-actions").hidden = manifest;
         Holo.renderScoreCard(document.getElementById("score-card"), s);
         if (manifest) {
@@ -305,34 +259,14 @@
         document.getElementById("btn-stay").textContent = spike
           ? "Stand · Bank"
           : "Stay · Bank";
-        document.getElementById("pad-todo").innerHTML = spike
-          ? "Spike. Hand total nearest 0. Bomb-out if |sum| &gt; 23. " +
-            'Public: <a href="index.html#REACTOR">Holotable Games</a>.'
-          : "Containment Lock / Overcharge Pulse / Neutralizer Shield resolve in the " +
-            "Flip 7 rules on the Holotable. Public table: " +
-            '<a href="index.html#REACTOR">Holotable Games</a>. ' +
-            "Seat via <code>?seat=0</code>, <code>?seat=1</code>, …";
 
         const hand = document.getElementById("hand");
         hand.innerHTML = "";
-        (s.hand || []).forEach(function (c) {
-          hand.appendChild(cardEl(c, spike));
-        });
-
-        const sumEl = document.getElementById("pad-sum");
+        document.getElementById("flip-hand").hidden = !spike;
         if (spike) {
-          sumEl.hidden = false;
-          const hs = s.hand_sum || 0;
-          sumEl.textContent =
-            "Sum " + (hs > 0 ? "+" : "") + hs +
-            " · stand " + (s.turn_score || 0) +
-            " · to " + (s.target || 100);
-        } else {
-          sumEl.hidden = false;
-          sumEl.textContent =
-            "Turn charge " + (s.turn_score || 0) +
-            (!spike && s.shield ? " · SHIELD" : "") +
-            " · to " + (s.target || 200);
+          (s.hand || []).forEach(function (c) {
+            hand.appendChild(cardEl(c, true));
+          });
         }
 
         const can = s.can_act && s.active_seat === seat;
@@ -413,22 +347,6 @@
       });
       document.getElementById("btn-end-manifest").addEventListener("click", function () {
         client && client.endGame(seat).catch(showPadError);
-      });
-      document.getElementById("game-picker").addEventListener("change", function (e) {
-        if (!client) return;
-        const game = e.target.value;
-        if (game === lastRules) return;
-        client.setGame(game, null, lastComputers).catch(function (err) {
-          showPadError(err);
-          e.target.value = lastRules;
-        });
-      });
-      document.getElementById("bot-picker").addEventListener("click", function (e) {
-        const btn = e.target.closest("button[data-computers]");
-        if (!btn || !client) return;
-        const n = Number(btn.getAttribute("data-computers"));
-        if (n === lastComputers) return;
-        client.setComputers(n).catch(showPadError);
       });
 
       const conn = document.getElementById("conn");

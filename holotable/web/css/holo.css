@@ -628,8 +628,9 @@ a { color: var(--teal-bright); }
   font-size: 1.05rem;
 }
 .pad-turn.waiting {
-  border-color: rgba(154, 168, 188, 0.35);
-  color: var(--muted);
+  border-color: var(--orange);
+  background: var(--orange-dim);
+  color: var(--orange-bright);
 }
 
 .hand {
@@ -689,15 +690,15 @@ a { color: var(--teal-bright); }
   min-height: 3.5rem;
   padding: 0.9rem 0.5rem;
   border-radius: 6px;
-  border: 2px solid var(--teal);
-  background: var(--teal-dim);
-  color: var(--teal-bright);
+  border: 2px solid var(--orange);
+  background: var(--orange-dim);
+  color: var(--orange-bright);
   cursor: pointer;
   transition: background 0.12s, box-shadow 0.12s, opacity 0.12s;
 }
 .actions button:hover:not(:disabled) {
-  background: rgba(0, 196, 174, 0.45);
-  box-shadow: var(--glow);
+  background: rgba(255, 140, 26, 0.45);
+  box-shadow: var(--glow-orange);
 }
 .actions button:active:not(:disabled) {
   transform: scale(0.98);
@@ -1038,12 +1039,12 @@ kbd {
   font-size: 1.7rem;
 }
 .pad-shell .score-card.flip-trays {
-  --flip-card: 2.3rem;
-  --flip-gap: 0.28rem;
+  --flip-gap: 0.3rem;
+  --flip-card: calc((100vw - 6.6rem) / 7);
   max-width: 100%;
 }
-.pad-shell .flip-drawn { font-size: 1.05rem; border-radius: 8px; }
-.pad-shell .flip-bonus { font-size: 1.2rem; }
+.pad-shell .flip-drawn { font-size: clamp(1rem, 4vw, 1.55rem); border-radius: 8px; }
+.pad-shell .flip-bonus { font-size: clamp(1.15rem, 4.4vw, 1.7rem); }
 .pad-shell .flip-number-tray { max-width: 100%; }
 
 /* Play fills the table the way a game fills a TV. Home dashboard stays off. */
@@ -1120,8 +1121,7 @@ body.play-mode #btn-end-table { width: min(1100px, 100%); }
   max-width: 1200px;
   margin: 0 auto 0.45rem;
 }
-.home-setup select,
-.pad-more select {
+.home-setup select {
   min-height: 2.6rem;
   padding: 0.35rem 0.7rem;
   font-family: var(--mono);
@@ -1187,13 +1187,13 @@ body.pad {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   font-size: 0.85rem;
-  color: var(--teal-bright);
+  color: var(--orange-bright);
   text-decoration: none;
   min-height: 2.5rem;
   display: inline-flex;
   align-items: center;
   padding: 0 0.75rem;
-  border: 2px solid var(--teal);
+  border: 2px solid var(--orange);
   border-radius: 8px;
 }
 .pad-bar .tag {
@@ -1206,8 +1206,29 @@ body.pad {
 .pad-shell .score-card {
   width: 100%;
   max-width: none;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  box-shadow: none;
   padding: 0.7rem 0.75rem 0.8rem;
+}
+.pad-shell .card {
+  border-color: var(--orange);
+  box-shadow: none;
+  background: var(--panel);
+}
+.pad-shell .card .rank { color: var(--orange-bright); }
+.pad-shell .hand { min-height: 0; margin: 0; }
+.pad-shell .role-btn,
+.pad-shell .good-card {
+  border-color: var(--orange);
+  background: var(--orange-dim);
+  color: var(--orange-bright);
+  box-shadow: none;
+}
+.pad-shell .role-btn.is-on,
+.pad-shell .good-card.is-on {
+  box-shadow: var(--glow-orange);
 }
 .pad-shell .score-tile,
 .pad-shell .bonus-tile {
@@ -1246,30 +1267,6 @@ body.pad {
   font-family: var(--mono);
   font-size: 0.85rem;
 }
-.pad-more {
-  border-top: 1px solid rgba(154, 168, 188, 0.25);
-  padding-top: 0.45rem;
-}
-.pad-more summary {
-  cursor: pointer;
-  font-family: var(--mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-  min-height: 2.4rem;
-  display: flex;
-  align-items: center;
-}
-.pad-more select { width: 100%; margin: 0.35rem 0 0.6rem; }
-.pad-more .bot-picker { margin-bottom: 0.5rem; }
-.pad-more .game-one { display: block; margin-top: 0.35rem; }
-.pad-more #pad-todo {
-  margin: 0.4rem 0 0;
-  color: var(--muted);
-  font-size: 0.85rem;
-  line-height: 1.4;
-}
-
 /* —— MANIFEST —— */
 .manifest-board { margin-bottom: 0.75rem; }
 .manifest-offer {
