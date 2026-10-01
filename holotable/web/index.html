@@ -59,42 +59,10 @@
       </div>
     </section>
 
-    <!-- REACTOR -->
+    <!-- REACTOR: the game fills this station. Setup stays on the home dashboard. -->
     <section class="station-panel" id="station-REACTOR" data-station-panel="REACTOR">
-      <div class="panel games-tab">
-        <h2>Games</h2>
-        <label class="game-one" for="game-picker">All games</label>
-        <select id="game-picker" aria-label="Choose a game">
-          <option value="flip7" data-game="flip7">Flip 7</option>
-          <option value="spike" data-game="spike">Spike</option>
-          <option value="manifest" data-game="manifest">MANIFEST</option>
-        </select>
-        <p class="legend" id="game-disclaimer">Flip 7.</p>
-      </div>
-
-      <div class="bot-picker panel" id="bot-picker" role="group" aria-label="Computer opponents">
-        <h2>Computers · solo / fill empty seats</h2>
-        <div class="bot-row" id="bot-row">
-          <button type="button" class="bot-n active" data-computers="0" aria-pressed="true">0</button>
-          <button type="button" class="bot-n" data-computers="1" aria-pressed="false">1</button>
-          <button type="button" class="bot-n" data-computers="2" aria-pressed="false">2</button>
-          <button type="button" class="bot-n" data-computers="3" aria-pressed="false">3</button>
-        </div>
-        <p class="legend">
-          Seat 0 = you (datapad). Bots auto-act — no phone pad needed.
-          Names: COSMOS · F.R.A.N.K. · Probe-7.
-        </p>
-      </div>
-
       <section class="score-card" id="score-card" aria-label="Scores"></section>
-      <p class="play-note" id="status" role="status"></p>
       <button type="button" class="end-game" id="btn-end-table" hidden>End game · show scores</button>
-      <p class="todo">
-        Solo: set <strong>Computers</strong> above, open
-        <a href="pad.html?seat=0">pad seat 0</a>.
-        Multi-human pads still work; bots fill other seats and auto-act.
-        Keys <kbd>1</kbd>–<kbd>5</kbd> switch stations.
-      </p>
     </section>
 
     <!-- BIO -->
@@ -124,7 +92,29 @@
     </section>
   </main>
 
-  <footer class="foot-hint">HOLOTABLE · Ohio ground station · no actuators / MQTT in this build</footer>
+  <footer class="holotable-foot">
+    <div class="home-setup">
+      <label class="game-one" for="game-picker">Game</label>
+      <select id="game-picker" aria-label="Choose a game">
+        <option value="flip7" data-game="flip7">Flip 7</option>
+        <option value="spike" data-game="spike">Spike</option>
+        <option value="manifest" data-game="manifest">MANIFEST</option>
+      </select>
+      <div class="bot-picker" id="bot-picker" role="group" aria-label="Computer opponents">
+        <span class="game-one">Computers</span>
+        <div class="bot-row" id="bot-row">
+          <button type="button" class="bot-n active" data-computers="0" aria-pressed="true">0</button>
+          <button type="button" class="bot-n" data-computers="1" aria-pressed="false">1</button>
+          <button type="button" class="bot-n" data-computers="2" aria-pressed="false">2</button>
+          <button type="button" class="bot-n" data-computers="3" aria-pressed="false">3</button>
+        </div>
+      </div>
+      <a class="phone-link" href="pad.html?seat=0">Phone</a>
+      <p class="play-note" id="status" role="status"></p>
+    </div>
+    <p class="foot-hint">HOLOTABLE · Ohio ground station · no actuators / MQTT in this build</p>
+  </footer>
+  <button type="button" id="btn-home" class="play-home">Home</button>
 
   <script src="js/holo.js"></script>
   <script>
@@ -146,6 +136,7 @@
         if (location.hash !== "#" + id) {
           history.replaceState(null, "", "#" + id);
         }
+        document.body.classList.toggle("play-mode", id === "REACTOR");
       }
 
       document.querySelectorAll("[data-station]").forEach(function (btn) {
@@ -203,18 +194,6 @@
       }
 
       function renderManifest(state) {
-        document.getElementById("game-disclaimer").textContent =
-          "MANIFEST. Name the good before they pay. Buyer pays 2. Look costs 1.";
-        const note = document.getElementById("status");
-        if (state.phase === "looking" && state.offer) {
-          note.textContent =
-            state.offer.seller_name + " names " + state.offer.claim.name +
-            " for " + state.offer.buyer_name + ". Paid 2.";
-        } else if (state.last_sale && state.last_sale.text) {
-          note.textContent = state.last_sale.text;
-        } else {
-          note.textContent = state.status || "";
-        }
         document.getElementById("btn-end-table").hidden = state.phase === "won";
       }
 
@@ -229,7 +208,6 @@
 
       function renderReactor(state) {
         const rules = Holo.rulesId(state);
-        const spike = rules === "spike";
         const manifest = rules === "manifest";
         syncPicker(rules);
         Holo.renderScoreCard(document.getElementById("score-card"), state);
@@ -243,11 +221,11 @@
           return;
         }
         endBtn.hidden = true;
-        document.getElementById("game-disclaimer").textContent = spike
-          ? "Spike. Nearest zero."
-          : "Flip 7.";
-        document.getElementById("status").textContent = state.status || "";
       }
+
+      document.getElementById("btn-home").addEventListener("click", function () {
+        showStation("WEATHER");
+      });
 
       document.getElementById("game-picker").addEventListener("change", function (e) {
         if (!client) return;

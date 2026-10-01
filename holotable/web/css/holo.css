@@ -1046,6 +1046,230 @@ kbd {
 .pad-shell .flip-bonus { font-size: 1.2rem; }
 .pad-shell .flip-number-tray { max-width: 100%; }
 
+/* Play fills the table the way a game fills a TV. Home dashboard stays off. */
+.play-home {
+  display: none;
+  position: fixed;
+  z-index: 30;
+  top: 1rem;
+  left: 1rem;
+  min-height: 2.75rem;
+  padding: 0.45rem 0.9rem;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--teal-bright);
+  background: var(--panel);
+  border: 2px solid var(--teal);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.play-home:hover { box-shadow: var(--glow); }
+body.play-mode .play-home { display: inline-flex; align-items: center; }
+body.play-mode .holotable-top,
+body.play-mode .holotable-foot { display: none !important; }
+body.play-mode .stage {
+  max-width: none;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 4.25rem 4vw 2rem;
+  justify-content: center;
+}
+body.play-mode #station-REACTOR {
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+body.play-mode .score-card,
+body.play-mode .score-card.flip-trays {
+  width: min(1100px, 100%);
+  max-width: min(1100px, 100%);
+  margin: 0;
+  padding: 1.6rem 1.8rem 1.8rem;
+}
+body.play-mode .score-card.flip-trays {
+  --flip-card: clamp(2.6rem, 7.2vw, 6rem);
+  --flip-gap: clamp(0.28rem, 1vw, 0.7rem);
+}
+body.play-mode .flip-drawn { font-size: clamp(1.4rem, 3vw, 2.6rem); }
+body.play-mode .flip-bonus { font-size: clamp(1.6rem, 3.2vw, 2.8rem); }
+body.play-mode .score-players li { font-size: clamp(1.7rem, 4vw, 3rem); }
+body.play-mode .score-tile,
+body.play-mode .bonus-tile {
+  width: clamp(6.4rem, 16vw, 9.5rem);
+  height: clamp(6.4rem, 16vw, 9.5rem);
+}
+body.play-mode .score-tile { font-size: clamp(2.4rem, 5vw, 3.6rem); }
+body.play-mode .bonus-icon { font-size: clamp(2rem, 4vw, 3rem); }
+body.play-mode #btn-end-table { width: min(1100px, 100%); }
+
+.holotable-foot {
+  margin-top: auto;
+  padding: 0.65rem 1rem 0.9rem;
+  border-top: 1px solid rgba(0, 196, 174, 0.28);
+  background: var(--panel);
+}
+.home-setup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.85rem;
+  max-width: 1200px;
+  margin: 0 auto 0.45rem;
+}
+.home-setup select,
+.pad-more select {
+  min-height: 2.6rem;
+  padding: 0.35rem 0.7rem;
+  font-family: var(--mono);
+  font-size: 1rem;
+  color: var(--text);
+  background: var(--bg);
+  border: 2px solid var(--teal);
+  border-radius: 6px;
+}
+.home-setup .bot-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+}
+.home-setup .play-note {
+  flex: 1 1 100%;
+  margin: 0;
+  max-width: none;
+  min-height: 0;
+}
+.home-setup .play-note:empty { display: none; }
+.phone-link {
+  margin-left: auto;
+  font-family: var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  min-height: 2.6rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.7rem;
+  border: 2px solid var(--teal);
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+/* Phone: the game fills the screen. Setup stays folded. */
+body.pad {
+  height: 100dvh;
+  overflow: hidden;
+  background: #000;
+}
+.pad-shell {
+  max-width: 720px;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0 auto;
+  padding: 0.7rem 0.85rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  overflow: hidden;
+}
+.pad-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.pad-home {
+  font-family: var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  color: var(--teal-bright);
+  text-decoration: none;
+  min-height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  border: 2px solid var(--teal);
+  border-radius: 8px;
+}
+.pad-bar .tag {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--orange-bright);
+}
+.pad-shell .score-card {
+  width: 100%;
+  max-width: none;
+  flex: 0 0 auto;
+  padding: 0.7rem 0.75rem 0.8rem;
+}
+.pad-shell .score-tile,
+.pad-shell .bonus-tile {
+  width: 4.1rem;
+  height: 4.1rem;
+  border-radius: 12px;
+}
+.pad-shell .score-tile { font-size: 1.45rem; }
+.pad-shell .bonus-icon { font-size: 1.35rem; }
+.pad-shell .score-players { margin-top: 0.4rem; }
+.pad-shell .score-players li { font-size: 1rem; padding: 0.2rem 0.05rem; }
+.pad-shell .pad-turn { margin: 0; }
+.pad-shell .play-hand {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+.pad-shell .play-hand h2 {
+  margin: 0.15rem 0 0.45rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.pad-shell .actions { margin-top: auto; }
+.pad-shell #manifest-actions {
+  position: sticky;
+  bottom: 0;
+  background: #000;
+  padding-top: 0.35rem;
+}
+.pad-shell .pad-meta {
+  margin: 0;
+  text-align: center;
+  color: var(--orange-bright);
+  font-family: var(--mono);
+  font-size: 0.85rem;
+}
+.pad-more {
+  border-top: 1px solid rgba(154, 168, 188, 0.25);
+  padding-top: 0.45rem;
+}
+.pad-more summary {
+  cursor: pointer;
+  font-family: var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  min-height: 2.4rem;
+  display: flex;
+  align-items: center;
+}
+.pad-more select { width: 100%; margin: 0.35rem 0 0.6rem; }
+.pad-more .bot-picker { margin-bottom: 0.5rem; }
+.pad-more .game-one { display: block; margin-top: 0.35rem; }
+.pad-more #pad-todo {
+  margin: 0.4rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
 /* —— MANIFEST —— */
 .manifest-board { margin-bottom: 0.75rem; }
 .manifest-offer {
