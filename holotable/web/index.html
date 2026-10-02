@@ -337,6 +337,7 @@
         document.getElementById("card-game").textContent = names[rules] || "Flip 7";
         document.getElementById("card-shield").textContent =
           rules === "flip7" && state.shield ? "Up" : "Down";
+        document.getElementById("card-status").textContent = state.status || "—";
         const endBtn = document.getElementById("btn-end-table");
         if (manifest) {
           endBtn.hidden = false;
@@ -389,7 +390,6 @@
           conn.textContent = "Link · " + label;
           conn.className = "conn " + (ok ? "ok" : "bad");
           document.getElementById("card-link").textContent = label;
-          document.getElementById("card-status").textContent = label;
         },
         onState: renderReactor,
         onError: function (err) {

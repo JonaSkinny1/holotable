@@ -723,9 +723,9 @@ button.status-card.active { border-color: var(--orange); }
   font-size: 1.05rem;
 }
 .pad-turn.waiting {
-  border-color: var(--orange);
-  background: var(--orange-dim);
-  color: var(--orange-bright);
+  border-color: rgba(154, 168, 188, 0.35);
+  background: var(--panel);
+  color: var(--muted);
 }
 
 .hand {
@@ -1064,8 +1064,11 @@ kbd {
   min-height: 1.2rem;
 }
 #station-GAMES .end-game {
-  display: block;
+  display: none;
   margin: 0.75rem auto 0;
+}
+body.play-mode #station-GAMES .end-game {
+  display: block;
 }
 .bonus-label {
   margin-top: 0.2rem;

@@ -296,11 +296,15 @@
       heart = { icon: "♥", label: "Pair", on: pairOn };
       star = { icon: "★", label: "Three", on: triple };
     } else if (rules === "spike") {
-      const sum = Number(state.hand_sum || 0);
-      const shown = (sum > 0 ? "+" : "") + sum;
-      tiles.push.apply(tiles, pair(shown, state.turn_score));
-      const limit = Number(state.bomb_limit || 23);
       const dealt = (state.hand || []).length > 0;
+      const sum = Number(state.hand_sum || 0);
+      const limit = Number(state.bomb_limit || 23);
+      if (dealt) {
+        const shown = (sum > 0 ? "+" : "") + sum;
+        tiles.push.apply(tiles, pair(shown, state.turn_score));
+      } else {
+        tiles.push.apply(tiles, pair(null, null));
+      }
       heart = { icon: "♥", label: "Safe", on: dealt && Math.abs(sum) <= limit };
       star = { icon: "★", label: "Pure", on: dealt && sum === 0 };
     }
