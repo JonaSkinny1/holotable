@@ -5,194 +5,252 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Holotable — Ohio Outpost // Sol-3</title>
   <link rel="stylesheet" href="css/holo.css" />
+  <script>
+    (function () {
+      var params = new URLSearchParams(location.search);
+      if (params.get("home") === "1") return;
+      if (!window.matchMedia("(max-width: 840px)").matches) return;
+      var seat = params.get("seat") || "0";
+      location.replace("pad.html?seat=" + encodeURIComponent(seat));
+    })();
+  </script>
 </head>
 <body class="holotable">
   <header class="holotable-top">
     <div class="holotable-brand">
       <span class="name">Holotable</span>
-      <span class="sub">Ohio Outpost // Sol-3 · Pepper’s Ghost table</span>
+      <span class="sub">Ohio Outpost // Sol-3</span>
     </div>
     <nav class="station-bar" aria-label="Stations">
-      <button type="button" data-station="WEATHER" class="active"><span class="key">1</span>Weather</button>
-      <button type="button" data-station="NAV"><span class="key">2</span>Nav</button>
-      <button type="button" data-station="REACTOR"><span class="key">3</span>Games</button>
-      <button type="button" data-station="BIO"><span class="key">4</span>Bio</button>
-      <button type="button" data-station="COMMS"><span class="key">5</span>Comms</button>
+      <button type="button" data-station="HOME" class="active">Home</button>
+      <button type="button" data-station="WEATHER">Weather</button>
+      <button type="button" data-station="NAV">Nav</button>
+      <button type="button" data-station="REACTOR">Reactor</button>
+      <button type="button" data-station="BIO">Bio</button>
+      <button type="button" data-station="COMMS">Comms</button>
+      <button type="button" data-station="GAMES">Games</button>
     </nav>
-    <div class="conn" id="conn">connecting…</div>
+    <div class="conn" id="conn">Link · …</div>
   </header>
 
   <main class="stage">
-    <!-- WEATHER -->
-    <section class="station-panel active" id="station-WEATHER" data-station-panel="WEATHER">
-      <div class="panel">
-        <h2>Space weather <span class="mock-badge">MOCK</span></h2>
-        <div class="viz-grid">
-          <div>
-            <div>Kp index</div>
-            <div style="font-family:var(--mono);font-size:1.8rem;color:var(--teal-bright)" data-kp>—</div>
-            <div class="kp-blocks" aria-hidden="true">
-              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-            </div>
-          </div>
-          <div>
-            <div>Solar flux proxy</div>
-            <div style="font-family:var(--mono);font-size:1.8rem;color:var(--orange-bright)" data-solar>—</div>
-            <div class="meter"><span data-solar-bar style="width:40%"></span></div>
-            <p class="legend">Stub viz for holotable demos. Live NOAA/SWPC optional later.</p>
-          </div>
-        </div>
+    <section class="station-panel active" id="station-HOME" data-station-panel="HOME">
+      <div class="home-title">
+        <h1>Holotable</h1>
+        <p>Ohio Outpost // Sol-3</p>
+      </div>
+      <div class="status-grid" aria-label="Home">
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">01</span> Weather</div>
+          <div class="mark-row" aria-hidden="true"><i></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
+          <div class="card-value">Quiet</div>
+          <div class="card-note">Kp</div>
+        </article>
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">02</span> Nav</div>
+          <div class="mark-dot" aria-hidden="true"></div>
+          <div class="card-value">Idle</div>
+          <div class="card-note">Sol · orbit</div>
+        </article>
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">03</span> Reactor</div>
+          <div class="mark-row" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
+          <div class="card-value">Standby</div>
+          <div class="card-note">Core</div>
+        </article>
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">04</span> Bio</div>
+          <div class="mark-row" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i class="on"></i></div>
+          <div class="card-value">Quiet</div>
+          <div class="card-note">Lab</div>
+        </article>
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">05</span> Comms</div>
+          <div class="card-value" id="card-comms">142.7</div>
+          <div class="card-note">Freq</div>
+        </article>
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">06</span> Games</div>
+          <div class="card-value" id="card-game">Flip 7</div>
+          <div class="card-note">On the table</div>
+        </article>
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">07</span> Link</div>
+          <div class="mark-dot" aria-hidden="true"></div>
+          <div class="card-value" id="card-link">…</div>
+          <div class="card-note">Table</div>
+        </article>
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">08</span> Ship clock</div>
+          <div class="card-value" id="card-clock">—</div>
+          <div class="card-note">Local</div>
+        </article>
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">09</span> Flip 7</div>
+          <div class="mark-row" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="card-value">Flip 7</div>
+          <div class="card-note">Number trays</div>
+        </article>
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">10</span> Spike</div>
+          <div class="card-value">Spike</div>
+          <div class="card-note">Nearest zero</div>
+        </article>
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">11</span> Seat</div>
+          <div class="card-value">Seat 0</div>
+          <div class="card-note">Phone</div>
+        </article>
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">12</span> Shield</div>
+          <div class="mark-dot" aria-hidden="true"></div>
+          <div class="card-value" id="card-shield">Down</div>
+          <div class="card-note">Flip 7</div>
+        </article>
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">13</span> Status</div>
+          <div class="card-value" id="card-status">…</div>
+          <div class="card-note">Table</div>
+        </article>
       </div>
     </section>
 
-    <!-- NAV -->
+    <section class="station-panel" id="station-WEATHER" data-station-panel="WEATHER">
+      <div class="status-grid">
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">01</span> Weather</div>
+          <div class="mark-row" aria-hidden="true"><i></i><i class="on"></i><i class="on"></i><i></i></div>
+          <div class="card-value">Quiet</div>
+          <div class="card-note">Kp</div>
+        </article>
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">02</span> Solar</div>
+          <div class="mark-row" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
+          <div class="card-value">Low</div>
+          <div class="card-note">Mark only</div>
+        </article>
+      </div>
+    </section>
+
     <section class="station-panel" id="station-NAV" data-station-panel="NAV">
-      <div class="panel">
-        <h2>Navigation <span class="mock-badge">MOCK</span></h2>
-        <div class="nav-orbit" aria-label="Earth / ISS stub">
-          <div class="earth" title="Earth"></div>
-          <div class="iss" title="ISS stub"></div>
-        </div>
-        <p class="legend" style="text-align:center">
-          Earth / ISS-style orbit stub. Wire TLE / ISS API in a later pass.
-        </p>
+      <div class="status-grid">
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">01</span> Nav</div>
+          <div class="mark-dot" aria-hidden="true"></div>
+          <div class="card-value">Idle</div>
+          <div class="card-note">Sol · orbit</div>
+        </article>
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">02</span> Fix</div>
+          <div class="mark-row" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i></div>
+          <div class="card-value">Hold</div>
+          <div class="card-note">No track</div>
+        </article>
       </div>
     </section>
 
-    <!-- REACTOR -->
     <section class="station-panel" id="station-REACTOR" data-station-panel="REACTOR">
-      <div class="panel games-tab">
-        <h2>Games</h2>
-        <label class="game-one" for="game-picker">All games</label>
+      <div class="status-grid">
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">01</span> Reactor</div>
+          <div class="mark-row" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
+          <div class="card-value">Standby</div>
+          <div class="card-note">Core</div>
+        </article>
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">02</span> Load</div>
+          <div class="mark-dot" aria-hidden="true"></div>
+          <div class="card-value">Dark</div>
+          <div class="card-note">Table</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="station-panel" id="station-BIO" data-station-panel="BIO">
+      <div class="status-grid">
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">01</span> Bio</div>
+          <div class="mark-row" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i class="on"></i></div>
+          <div class="card-value">Quiet</div>
+          <div class="card-note">Lab</div>
+        </article>
+        <article class="status-card">
+          <div class="card-kicker"><span class="idx">02</span> Bench</div>
+          <div class="mark-dot" aria-hidden="true"></div>
+          <div class="card-value">Dark</div>
+          <div class="card-note">No feed</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="station-panel" id="station-COMMS" data-station-panel="COMMS">
+      <div class="status-grid" id="freq-dial">
+        <button type="button" class="status-card freq-card active" data-freq="142.7">
+          <div class="card-kicker"><span class="idx">01</span> Comms</div>
+          <div class="card-value">142.7</div>
+          <div class="card-note">Locked</div>
+        </button>
+        <button type="button" class="status-card freq-card" data-freq="218.4">
+          <div class="card-kicker"><span class="idx">02</span> Comms</div>
+          <div class="card-value">218.4</div>
+          <div class="card-note">Open</div>
+        </button>
+        <button type="button" class="status-card freq-card" data-freq="333.0">
+          <div class="card-kicker"><span class="idx">03</span> Comms</div>
+          <div class="card-value">333.0</div>
+          <div class="card-note">Open</div>
+        </button>
+        <button type="button" class="status-card freq-card" data-freq="407.1">
+          <div class="card-kicker"><span class="idx">04</span> Comms</div>
+          <div class="card-value">407.1</div>
+          <div class="card-note">Open</div>
+        </button>
+      </div>
+    </section>
+
+    <section class="station-panel" id="station-GAMES" data-station-panel="GAMES">
+      <div class="games-setup">
+        <label class="game-one" for="game-picker">Game</label>
         <select id="game-picker" aria-label="Choose a game">
           <option value="flip7" data-game="flip7">Flip 7</option>
           <option value="spike" data-game="spike">Spike</option>
           <option value="manifest" data-game="manifest">MANIFEST</option>
         </select>
-        <p class="legend" id="game-disclaimer">
-          Flip 7 on the Holotable. First to 200.
-        </p>
-      </div>
-
-      <div class="bot-picker panel" id="bot-picker" role="group" aria-label="Computer opponents">
-        <h2>Computers · solo / fill empty seats</h2>
-        <div class="bot-row" id="bot-row">
-          <button type="button" class="bot-n active" data-computers="0" aria-pressed="true">0</button>
-          <button type="button" class="bot-n" data-computers="1" aria-pressed="false">1</button>
-          <button type="button" class="bot-n" data-computers="2" aria-pressed="false">2</button>
-          <button type="button" class="bot-n" data-computers="3" aria-pressed="false">3</button>
+        <div class="bot-picker" id="bot-picker" role="group" aria-label="Computer opponents">
+          <span class="game-one">Computers</span>
+          <div class="bot-row" id="bot-row">
+            <button type="button" class="bot-n active" data-computers="0" aria-pressed="true">0</button>
+            <button type="button" class="bot-n" data-computers="1" aria-pressed="false">1</button>
+            <button type="button" class="bot-n" data-computers="2" aria-pressed="false">2</button>
+            <button type="button" class="bot-n" data-computers="3" aria-pressed="false">3</button>
+          </div>
         </div>
-        <p class="legend">
-          Seat 0 = you (datapad). Bots auto-act — no phone pad needed.
-          Names: COSMOS · F.R.A.N.K. · Probe-7.
-        </p>
+        <a class="phone-link" href="pad.html?seat=0">Phone</a>
+        <button type="button" class="play-btn" id="btn-play">Play</button>
+        <p class="play-note" id="status" role="status"></p>
       </div>
-
-      <div class="match-hud" id="match-hud" aria-live="polite">
-        <div class="hud-game" id="hud-game">Flip 7</div>
-        <div class="hud-turn" id="hud-turn">Standby</div>
-        <div class="hud-target" id="hud-target">Race to 200</div>
-      </div>
-
       <section class="score-card" id="score-card" aria-label="Scores"></section>
-
-      <div id="manifest-board" class="manifest-board" hidden>
-        <div class="panel">
-          <h2>MANIFEST · markets face up</h2>
-          <p class="manifest-offer" id="manifest-offer">Sell one card. Name it before they pay.</p>
-          <div class="manifest-seats" id="manifest-seats"></div>
-          <div class="final-scores" id="manifest-final" hidden></div>
-          <p class="legend" id="manifest-legend">Score = coins + market. One card 2, a pair 6, three of a kind 10.</p>
-          <button type="button" class="end-game" id="btn-end-table">End game · show scores</button>
-        </div>
-      </div>
-
-      <div class="reactor-grid" id="reactor-grid">
-        <div class="panel reactor-core-wrap">
-          <h2 id="reactor-title">Flip 7</h2>
-          <div class="reactor-core" id="reactor-core">
-            <span class="core-label" id="core-label">Turn charge</span>
-            <span class="core-value" id="turn-score">0</span>
-          </div>
-          <div class="last-flip">
-            <div class="flip-card" id="last-flip">—</div>
-            <div class="flip-hint" id="last-hint">awaiting flux</div>
-          </div>
-          <div class="hand-row" id="public-hand" aria-label="Public hand"></div>
-          <p class="legend" id="hand-sum-line" hidden>Hand sum: <strong id="hand-sum">0</strong></p>
-        </div>
-        <aside class="panel">
-          <h2 id="scores-heading">Rules</h2>
-          <p class="legend" id="rules-legend">
-            First to <strong>200</strong>.<br />
-            Freeze → <strong>Containment Lock</strong><br />
-            Flip 3 → <strong>Overcharge Pulse</strong><br />
-            Second Chance → <strong>Neutralizer Shield</strong><br />
-            Seven unique → <strong>Flip 7</strong> (+15)
-          </p>
-        </aside>
-      </div>
-      <div class="status-bar" id="status" role="status">Holotable standby</div>
-      <p class="todo">
-        Solo: set <strong>Computers</strong> above, open
-        <a href="pad.html?seat=0">pad seat 0</a>.
-        Multi-human pads still work; bots fill other seats and auto-act.
-        Keys <kbd>1</kbd>–<kbd>5</kbd> switch stations.
-      </p>
-    </section>
-
-    <!-- BIO -->
-    <section class="station-panel" id="station-BIO" data-station-panel="BIO">
-      <div class="panel">
-        <h2>Bio lab · specimens <span class="mock-badge">MOCK</span></h2>
-        <div class="vials" id="vials">
-          <!-- SP-01 .. SP-08 -->
-        </div>
-        <p class="legend">Specimen vials SP-01–SP-08. Status flips locally for table energy.</p>
-      </div>
-    </section>
-
-    <!-- COMMS -->
-    <section class="station-panel" id="station-COMMS" data-station-panel="COMMS">
-      <div class="panel">
-        <h2>Comms · frequency dial <span class="mock-badge">MOCK</span></h2>
-        <div class="freq-dial" id="freq-dial">
-          <button type="button" data-freq="142.7" class="active">142.7</button>
-          <button type="button" data-freq="218.4">218.4</button>
-          <button type="button" data-freq="333.0">333.0</button>
-          <button type="button" data-freq="407.1">407.1</button>
-        </div>
-        <div class="comms-wave" aria-hidden="true"></div>
-        <p class="legend" id="freq-label">Locked 142.7 MHz (stub)</p>
-      </div>
+      <button type="button" class="end-game" id="btn-end-table" hidden>End game · show scores</button>
     </section>
   </main>
 
-  <footer class="foot-hint">HOLOTABLE · Ohio ground station · no actuators / MQTT in this build</footer>
+  <footer class="holotable-foot">
+    <p class="foot-hint">HOLOTABLE · Ohio Outpost // Sol-3 · no actuators / MQTT in this build</p>
+  </footer>
+  <button type="button" id="btn-home" class="play-home">Home</button>
 
   <script src="js/holo.js"></script>
   <script>
     (function () {
-      const STATIONS = ["WEATHER", "NAV", "REACTOR", "BIO", "COMMS"];
-      let current = "WEATHER";
+      const STATIONS = ["HOME", "WEATHER", "NAV", "REACTOR", "BIO", "COMMS", "GAMES"];
+      let current = "HOME";
       let client = null;
       let lastRules = "flip7";
       let lastComputers = 0;
-
-      const FLIP7_LEGEND =
-        "First to <strong>200</strong>.<br />" +
-        "Freeze → <strong>Containment Lock</strong><br />" +
-        "Flip 3 → <strong>Overcharge Pulse</strong><br />" +
-        "Second Chance → <strong>Neutralizer Shield</strong><br />" +
-        "Seven unique → <strong>Flip 7</strong> (+15)";
-
-      const SPIKE_LEGEND =
-        "Goal: hand total nearest <strong>0</strong>.<br />" +
-        "Bomb-out if <strong>|sum| &gt; 23</strong>.<br />" +
-        "Stand scores <strong>24 − |sum|</strong> (Pure Spike = 24).<br />" +
-        "First to <strong>100</strong>. 2–4 players.";
+      let playing = false;
 
       function showStation(id) {
+        if (id !== "GAMES") playing = false;
         current = id;
         document.querySelectorAll("[data-station]").forEach(function (btn) {
           btn.classList.toggle("active", btn.getAttribute("data-station") === id);
@@ -203,6 +261,7 @@
         if (location.hash !== "#" + id) {
           history.replaceState(null, "", "#" + id);
         }
+        document.body.classList.toggle("play-mode", playing);
       }
 
       document.querySelectorAll("[data-station]").forEach(function (btn) {
@@ -214,7 +273,7 @@
       window.addEventListener("keydown", function (e) {
         if (e.target && /input|textarea|select/i.test(e.target.tagName)) return;
         const n = e.key;
-        if (n >= "1" && n <= "5") {
+        if (n >= "1" && n <= "7") {
           showStation(STATIONS[Number(n) - 1]);
         }
       });
@@ -222,33 +281,27 @@
       const hash = (location.hash || "").replace(/^#/, "").toUpperCase();
       if (STATIONS.indexOf(hash) >= 0) showStation(hash);
 
-      // BIO vials
-      const vials = document.getElementById("vials");
-      for (let i = 1; i <= 8; i++) {
-        const code = "SP-" + String(i).padStart(2, "0");
-        const d = document.createElement("div");
-        d.className = "vial";
-        d.innerHTML = '<div class="code">' + code + '</div><div class="st">STABLE</div>';
-        vials.appendChild(d);
-      }
-
-      // COMMS
       document.getElementById("freq-dial").addEventListener("click", function (e) {
         const btn = e.target.closest("button[data-freq]");
         if (!btn) return;
         document.querySelectorAll("#freq-dial button").forEach(function (b) {
-          b.classList.toggle("active", b === btn);
+          const on = b === btn;
+          b.classList.toggle("active", on);
+          const note = b.querySelector(".card-note");
+          if (note) note.textContent = on ? "Locked" : "Open";
         });
-        document.getElementById("freq-label").textContent =
-          "Locked " + btn.getAttribute("data-freq") + " MHz (stub)";
+        document.getElementById("card-comms").textContent = btn.getAttribute("data-freq");
       });
 
-      // Mock ticks
-      const weatherRoot = document.getElementById("station-WEATHER");
-      const bioRoot = document.getElementById("station-BIO");
-      Holo.Stations.weatherTick(weatherRoot);
-      setInterval(function () { Holo.Stations.weatherTick(weatherRoot); }, 2800);
-      setInterval(function () { Holo.Stations.bioTick(bioRoot); }, 4200);
+      function tickClock() {
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2, "0");
+        const mm = String(now.getMinutes()).padStart(2, "0");
+        const ss = String(now.getSeconds()).padStart(2, "0");
+        document.getElementById("card-clock").textContent = hh + ":" + mm + ":" + ss;
+      }
+      tickClock();
+      setInterval(tickClock, 1000);
 
       // Reactor live state
       const conn = document.getElementById("conn");
@@ -259,112 +312,7 @@
         if (sel && sel.value !== lastRules) sel.value = lastRules;
       }
 
-      function esc(s) {
-        return String(s == null ? "" : s)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;");
-      }
-
       function renderManifest(state) {
-        document.getElementById("reactor-title").textContent = "MANIFEST";
-        document.getElementById("hud-game").textContent = "MANIFEST";
-        document.getElementById("hud-target").textContent =
-          "Round " + (state.round || 1) + " of " + (state.round_limit || 8);
-        document.getElementById("game-disclaimer").textContent =
-          "MANIFEST. Name the good before they pay. Buyer pays 2. Look costs 1. A miss fails the sale.";
-
-        const turnEl = document.getElementById("hud-turn");
-        if (state.phase === "won") {
-          turnEl.textContent = state.tied
-            ? "Tie"
-            : (state.winner && state.winner.name ? state.winner.name + " wins" : "Scores");
-        } else if (state.phase === "looking" && state.offer) {
-          turnEl.innerHTML =
-            "Look · <strong>" + esc(state.offer.buyer_name) + "</strong>" +
-            '<span class="seat-pill">S' + state.offer.buyer_seat + "</span>";
-        } else {
-          const ap = activePlayer(state);
-          if (ap) {
-            turnEl.innerHTML =
-              "Sell · <strong>" + esc(ap.name) + "</strong>" +
-              '<span class="seat-pill">S' + ap.seat + "</span>";
-          } else {
-            turnEl.textContent = "Standby";
-          }
-        }
-
-        document.getElementById("status").textContent = state.status || "";
-        const offerEl = document.getElementById("manifest-offer");
-        if (state.phase === "looking" && state.offer) {
-          offerEl.textContent =
-            state.offer.seller_name + " names " + state.offer.claim.name +
-            " for " + state.offer.buyer_name + ". Paid 2. " +
-            state.offer.buyer_name + " may pay 1 to look, or let the sale stand.";
-        } else if (state.last_sale && state.last_sale.text) {
-          offerEl.textContent = state.last_sale.text;
-        } else {
-          offerEl.textContent = "Sell one card from your hand. Name it before they pay.";
-        }
-
-        const seats = document.getElementById("manifest-seats");
-        seats.innerHTML = "";
-        (state.players || []).forEach(function (p) {
-          const box = document.createElement("article");
-          box.className = "manifest-seat" + (p.active ? " active" : "") + (p.leading ? " leading" : "");
-          const head = document.createElement("header");
-          const who = document.createElement("span");
-          who.className = "who";
-          who.textContent = p.name;
-          head.appendChild(who);
-          if (p.active) {
-            const badge = document.createElement("span");
-            badge.className = "turn-badge";
-            badge.textContent = "TURN";
-            head.appendChild(badge);
-          }
-          if (p.is_bot) {
-            const cpu = document.createElement("span");
-            cpu.className = "bot-badge";
-            cpu.textContent = "CPU";
-            head.appendChild(cpu);
-          }
-          const role = document.createElement("span");
-          role.className = "role";
-          role.textContent = p.role_label || "No side picked";
-          head.appendChild(role);
-          box.appendChild(head);
-
-          const breakdown = document.createElement("p");
-          breakdown.className = "breakdown";
-          breakdown.textContent = p.coins + " coins · market " + p.market_points;
-          box.appendChild(breakdown);
-
-          const lines = document.createElement("p");
-          lines.className = "lines";
-          const parts = (p.market_lines || []).map(function (line) {
-            return line.name + " ×" + line.count + " — " + line.points;
-          });
-          lines.textContent = parts.length ? parts.join(" · ") : "Market is empty";
-          box.appendChild(lines);
-
-          const market = document.createElement("div");
-          market.className = "hand-row";
-          (p.market || []).forEach(function (c) {
-            const el = document.createElement("div");
-            el.className = "mini-card good";
-            el.setAttribute("data-good", c.id || "");
-            el.textContent = Holo.goodName(c);
-            market.appendChild(el);
-          });
-          box.appendChild(market);
-          seats.appendChild(box);
-        });
-
-        const finalEl = document.getElementById("manifest-final");
-        finalEl.hidden = true;
-        document.getElementById("manifest-legend").textContent =
-          state.score_legend || "Score = coins + market. One card 2, a pair 6, three of a kind 10.";
         document.getElementById("btn-end-table").hidden = state.phase === "won";
       }
 
@@ -377,97 +325,35 @@
         });
       }
 
-      function activePlayer(state) {
-        const seat = state.active_seat;
-        const players = state.players || [];
-        for (let i = 0; i < players.length; i++) {
-          if (players[i].seat === seat) return players[i];
-        }
-        return null;
-      }
-
       function renderReactor(state) {
         const rules = Holo.rulesId(state);
-        const spike = rules === "spike";
         const manifest = rules === "manifest";
         syncPicker(rules);
         Holo.renderScoreCard(document.getElementById("score-card"), state);
-        document.getElementById("manifest-board").hidden = !manifest;
-        document.getElementById("reactor-grid").hidden = manifest;
         if (state.computers !== undefined && state.computers !== null) {
           syncBots(state.computers);
         }
+        const names = { flip7: "Flip 7", spike: "Spike", manifest: "MANIFEST" };
+        document.getElementById("card-game").textContent = names[rules] || "Flip 7";
+        document.getElementById("card-shield").textContent =
+          rules === "flip7" && state.shield ? "Up" : "Down";
+        const endBtn = document.getElementById("btn-end-table");
         if (manifest) {
+          endBtn.hidden = false;
           renderManifest(state);
           return;
         }
-        document.getElementById("game-disclaimer").textContent = spike
-          ? "Spike on the Holotable. Nearest zero. First to 100."
-          : "Flip 7 on the Holotable. First to 200.";
-
-        const gameTitle = spike ? "Spike" : "Flip 7";
-        document.getElementById("reactor-title").textContent = spike
-          ? "Spike"
-          : "Flip 7";
-        document.getElementById("hud-game").textContent = gameTitle;
-        document.getElementById("hud-target").textContent = spike
-          ? "Race to " + (state.target || 100)
-          : "Race to " + (state.target || 200);
-
-        const ap = activePlayer(state);
-        const turnEl = document.getElementById("hud-turn");
-        if (ap) {
-          turnEl.innerHTML =
-            "Turn · <strong>" + ap.name + "</strong>" +
-            '<span class="seat-pill">S' + ap.seat + "</span>";
-        } else {
-          turnEl.textContent = "Standby";
-        }
-
-        document.getElementById("core-label").textContent = spike
-          ? (state.hand_sum !== undefined ? "Hand sum" : "Potential")
-          : "Turn charge";
-        document.getElementById("turn-score").textContent = spike
-          ? (state.hand_sum !== undefined ? (state.hand_sum > 0 ? "+" : "") + state.hand_sum : state.turn_score)
-          : state.turn_score;
-        document.getElementById("rules-legend").innerHTML = spike ? SPIKE_LEGEND : FLIP7_LEGEND;
-        document.getElementById("scores-heading").textContent = "Rules";
-
-        const sumLine = document.getElementById("hand-sum-line");
-        if (spike) {
-          sumLine.hidden = false;
-          const hs = state.hand_sum || 0;
-          document.getElementById("hand-sum").textContent = (hs > 0 ? "+" : "") + hs +
-            " · stand worth " + (state.turn_score || 0);
-        } else {
-          sumLine.hidden = true;
-        }
-
-        document.getElementById("last-flip").textContent = Holo.cardShort(state.last_flip);
-        document.getElementById("last-hint").textContent =
-          state.last_flip && state.last_flip !== "—"
-            ? state.last_flip + (!spike && state.shield ? " · Neutralizer Shield armed" : "")
-            : (spike ? "awaiting draw" : "awaiting flux");
-        document.getElementById("status").textContent = state.status || "";
-        const core = document.getElementById("reactor-core");
-        core.classList.toggle("bust", /bust|bomb/i.test(state.status || ""));
-
-        const hand = document.getElementById("public-hand");
-        hand.innerHTML = "";
-        (state.hand || []).forEach(function (c) {
-          const el = document.createElement("div");
-          let cls = "mini-card";
-          if (spike) {
-            const pol = Holo.cardPolarity(c);
-            if (pol) cls += " " + pol;
-          } else if (Holo.isActionLabel(c)) {
-            cls += " action";
-          }
-          el.className = cls;
-          el.textContent = Holo.cardShort(c);
-          hand.appendChild(el);
-        });
+        endBtn.hidden = true;
       }
+
+      document.getElementById("btn-home").addEventListener("click", function () {
+        showStation("HOME");
+      });
+
+      document.getElementById("btn-play").addEventListener("click", function () {
+        playing = true;
+        showStation("GAMES");
+      });
 
       document.getElementById("game-picker").addEventListener("change", function (e) {
         if (!client) return;
@@ -499,8 +385,11 @@
       client = Holo.connect({
         role: "table",
         onConn: function (ok) {
-          conn.textContent = ok ? "link OK · ws" : "link… (REST poll)";
+          const label = ok ? "OK" : "…";
+          conn.textContent = "Link · " + label;
           conn.className = "conn " + (ok ? "ok" : "bad");
+          document.getElementById("card-link").textContent = label;
+          document.getElementById("card-status").textContent = label;
         },
         onState: renderReactor,
         onError: function (err) {
